@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Scan the shared UI package so its Tailwind classes are included. */
+@source "../../../packages/ui/src/**/*.{ts,tsx}";

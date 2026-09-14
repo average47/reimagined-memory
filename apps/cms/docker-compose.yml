@@ -1,0 +1,70 @@
+name: reimagined-memory-cms
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${WORDPRESS_DB_NAME:-wordpress}
+      MARIADB_USER: ${WORDPRESS_DB_USER:-wordpress}
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wordpress}
+      MARIADB_ROOT_PASSWORD: ${WORDPRESS_DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  wordpress:
+    image: wordpress:7.1-php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WORDPRESS_PORT:-80}:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wordpress}
+      # Required so wp-cli can convert the install into a multisite network.
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ALLOW_MULTISITE', true);
+    volumes:
+      - wp_data:/var/www/html
+
+  # One-shot initializer: installs WordPress core and the WPGraphQL plugin,
+  # then exits. Idempotent — safe to run on every `up`.
+  wp-cli:
+    image: wordpress:cli-php8.3
+    # Match the uid the wordpress (Debian) image owns files as, so wp-cli can
+    # write to the shared wp_data volume (wp-content/upgrade, uploads, etc.).
+    user: "33:33"
+    depends_on:
+      wordpress:
+        condition: service_started
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wordpress}
+      # Target core version — keep in sync with the `wordpress` image tag above.
+      WORDPRESS_CORE_VERSION: ${WORDPRESS_CORE_VERSION:-7.1}
+      WORDPRESS_SITE_URL: ${WORDPRESS_SITE_URL:-http://localhost}
+      WORDPRESS_SITE_TITLE: ${WORDPRESS_SITE_TITLE:-Reimagined Memory CMS}
+      WORDPRESS_ADMIN_USER: ${WORDPRESS_ADMIN_USER:-admin}
+      WORDPRESS_ADMIN_PASSWORD: ${WORDPRESS_ADMIN_PASSWORD:-admin}
+      WORDPRESS_ADMIN_EMAIL: ${WORDPRESS_ADMIN_EMAIL:-admin@example.com}
+    volumes:
+      - wp_data:/var/www/html
+      - ./scripts:/scripts:ro
+    entrypoint: ["bash", "/scripts/setup.sh"]
+
+volumes:
+  db_data:
+  wp_data:

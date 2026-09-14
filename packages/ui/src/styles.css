@@ -1,0 +1,5 @@
+/*
+ * Optional shared styles for the UI library.
+ * Consuming apps import Tailwind and use `@source` to scan this package's
+ * components (see apps/web/app/globals.css).
+ */
