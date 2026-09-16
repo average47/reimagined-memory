@@ -1,0 +1,19 @@
+{
+  "background/default": "bg-[#000000]",
+  "background/surface": "bg-[#303030]",
+  "background/inverse": "bg-[#ffffff]",
+  "text/primary": "text-[#000000]",
+  "text/secondary": "text-[#ffffff]",
+  "text/tertiary": "text-[#e6e6e6]",
+  "action/primary": "bg-[#fdb517]",
+  "action/secondary": "bg-[#000000]",
+  "action/tertiary": "bg-[#000000]",
+  "hover/primary": "hover:bg-[#ffffff]",
+  "hover/secondary": "hover:bg-[#3b3b3b]",
+  "hover/tertiary": "hover:bg-[#3b3b3b]",
+  "border/default": "border-[#3b3b3b]",
+  "border/hover": "hover:border-[#ffffff]",
+  "status/error": "text-[#df0000]",
+  "status/warning": "text-[#ff9f0a]",
+  "status/success": "text-[#30d158]"
+}

@@ -1,29 +1,65 @@
-import { Button, Card, CardDescription, CardTitle } from "@repo/ui";
-import { formatDate } from "@repo/utils";
+import { headers } from 'next/headers';
+import { getPageBySlug, tenantForNetworkPath } from '@/lib/wordpress';
+import type { PageContentNode } from '@/lib/wordpress.types';
 
-export default function Home() {
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function SlugPage({ params }: Props) {
+  const { slug } = await params;
+  const networkPath = (await headers()).get('x-network-path');
+  const tenant = tenantForNetworkPath(networkPath);
+
+  let data: PageContentNode | null = null;
+  let error: string | null = null;
+  try {
+    data = await getPageBySlug(tenant, slug);
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+  }
+
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Reimagined Memory</h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          Monorepo scaffolded {formatDate(Date.now())} — Next.js app,{" "}
-          <code>@repo/ui</code> component library, and <code>@repo/utils</code>.
-        </p>
-      </header>
+    <main style={{ fontFamily: 'ui-monospace, monospace', padding: '2rem' }}>
+      <h1>
+        {slug} | {networkPath}
+      </h1>
+      <p style={{ color: '#666' }}>
+        tenant: <strong>{tenant}</strong>
+      </p>
 
-      <Card>
-        <CardTitle>Shared components</CardTitle>
-        <CardDescription>
-          The Button below is imported from the <code>@repo/ui</code> package and
-          styled with Tailwind classes scanned across the workspace.
-        </CardDescription>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-        </div>
-      </Card>
+      {error ? (
+        <pre
+          style={{
+            background: '#2b0000',
+            borderRadius: '0.5rem',
+            color: '#ff8a8a',
+            overflow: 'auto',
+            padding: '1rem',
+          }}
+        >
+          Error fetching page data: {error}
+        </pre>
+      ) : data ? (
+        <pre
+          style={{
+            background: '#0d1117',
+            borderRadius: '0.5rem',
+            color: '#c9d1d9',
+            overflow: 'auto',
+            padding: '1rem',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      ) : (
+        <p>
+          No content found for slug <code>{slug}</code> in tenant{' '}
+          <code>{tenant}</code>.
+        </p>
+      )}
     </main>
   );
 }

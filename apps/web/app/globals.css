@@ -1,4 +1,167 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import './colors.css';
 
 /* Scan the shared UI package so its Tailwind classes are included. */
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+/*
+ * Brand design tokens (from Figma "Marketing Platform | Design System").
+ * Mirror Figma variables here as theme tokens so components reference
+ * `bg-amc-primary` / `text-amc-fg-muted` / `font-endurance` rather than raw
+ * values. Per-brand differences belong in these token values, not in
+ * divergent component code.
+ */
+@theme {
+  --color-amc-primary: #00eee6; /* action/primary */
+  --color-amc-fg-muted: #e6e6e6; /* text/tertiary */
+  --font-endurance:
+    'Endurance Pro', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/*
+ * White Label base tokens (Figma "White Label" mode).
+ * Mirrors the Figma variable structure so components reference semantic
+ * utilities (bg-action-primary, text-text-tertiary, gap-7, text-11,
+ * leading-7, font-headline) instead of raw values. Per-brand modes should
+ * override these values, not fork component code.
+ */
+@theme {
+  /* Colors — background/* */
+  --color-background: #000000;
+  --color-surface: #303030;
+  --color-inverse: #ffffff;
+
+  /* Colors — text/* */
+  --color-text-primary: #000000;
+  --color-text-secondary: #ffffff;
+  --color-text-tertiary: #e6e6e6;
+
+  /* Colors — action/* */
+  --color-action-primary: #fdb517;
+  --color-action-secondary: #000000;
+  --color-action-tertiary: #000000;
+
+  /* Colors — hover/* */
+  --color-hover-primary: #ffffff;
+  --color-hover-secondary: #3b3b3b;
+  --color-hover-tertiary: #3b3b3b;
+
+  /* Colors — border/* */
+  --color-border-default: #3b3b3b;
+  --color-border-hover: #ffffff;
+
+  /* Colors — status/* */
+  --color-status-error: #df0000;
+  --color-status-warning: #ff9f0a;
+  --color-status-success: #30d158;
+
+  /* Font families (all Inter across roles) */
+  --font-headline: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-cta: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-badge: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Font weights */
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+
+  /* Font sizes (font/size/*) */
+  --text-1: 10px;
+  --text-2: 12px;
+  --text-3: 14px;
+  --text-4: 16px;
+  --text-5: 18px;
+  --text-6: 20px;
+  --text-7: 24px;
+  --text-8: 28px;
+  --text-9: 32px;
+  --text-10: 40px;
+  --text-11: 48px;
+
+  /* Line heights (font/line-height/*) */
+  --leading-1: 14px;
+  --leading-2: 17px;
+  --leading-3: 19px;
+  --leading-4: 20px;
+  --leading-5: 22px;
+  --leading-6: 24px;
+  --leading-7: 25px;
+  --leading-8: 28px;
+  --leading-9: 32px;
+  --leading-10: 40px;
+  --leading-11: 48px;
+
+  /* Spacing scale (spacing/*) — feeds p-/m-/gap-/w-/h- utilities */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 32px;
+  --spacing-8: 40px;
+  --spacing-9: 48px;
+  --spacing-10: 64px;
+  --spacing-11: 80px;
+  --spacing-12: 96px;
+  --spacing-13: 128px;
+  --spacing-14: 160px;
+}
+
+/*
+ * Semantic action tokens (primary / secondary / danger button states).
+ * Defaults below are the base brand (AMC+ / teal). Per-brand primary
+ * differences are value overrides in the [data-brand] blocks that follow —
+ * component code always references bg-primary-enabled etc., never a raw
+ * palette color. secondary/* and danger/* are shared across all brands.
+ */
+@theme {
+  --color-primary-enabled: var(--color-bronze-500);
+  --color-primary-hover: var(--color-bronze-600);
+  --color-primary-active: var(--color-bronze-700);
+  --color-primary-disabled: var(--color-grey-400);
+  --color-secondary-enabled: var(--color-white-100);
+  --color-secondary-hover: var(--color-grey-200);
+  --color-secondary-active: var(--color-grey-700);
+  --color-secondary-disabled: var(--color-grey-400);
+  --color-danger-enabled: var(--color-red-500);
+  --color-danger-hover: var(--color-red-600);
+  --color-danger-active: var(--color-red-700);
+  --color-danger-disabled: var(--color-grey-400);
+}
+
+/*
+ * Per-brand primary overrides. A brand layout sets data-brand on a wrapper,
+ * and the primary-* custom properties cascade to that subtree. Only the
+ * primary palette differs per brand; amcplus uses the teal defaults above.
+ */
+[data-brand='acorn'] {
+  --color-primary-enabled: var(--color-lime-500);
+  --color-primary-hover: var(--color-lime-600);
+  --color-primary-active: var(--color-lime-700);
+}
+
+[data-brand='amcplus'] {
+  --color-primary-enabled: var(--color-teal-500);
+  --color-primary-hover: var(--color-teal-600);
+  --color-primary-active: var(--color-teal-700);
+}
+
+[data-brand='shudder'] {
+  --color-primary-enabled: var(--color-red-500);
+  --color-primary-hover: var(--color-red-600);
+  --color-primary-active: var(--color-red-700);
+}
+
+[data-brand='sundancenow'] {
+  --color-primary-enabled: var(--color-yellow-500);
+  --color-primary-hover: var(--color-yellow-600);
+  --color-primary-active: var(--color-yellow-700);
+}
+
+[data-brand='wetv'] {
+  --color-primary-enabled: var(--color-blue-500);
+  --color-primary-hover: var(--color-blue-600);
+  --color-primary-active: var(--color-blue-700);
+}

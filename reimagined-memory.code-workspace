@@ -1,8 +1,28 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "name": "Website",
+      "path": "./apps/web",
+    },
+    {
+      "name": "Dev Proxy",
+      "path": "./apps/proxy",
+    },
+    {
+      "name": "WordPress (Headless)",
+      "path": "./apps/cms",
+    },
+    {
+      "name": "Components Library",
+      "path": "./packages/ui",
+    },
+    {
+      "name": "Utility Library",
+      "path": "./packages/utils",
+    },
+  ],
+  "settings": {},
+  "extensions": {
+    "recommendations": ["esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"],
+  },
 }

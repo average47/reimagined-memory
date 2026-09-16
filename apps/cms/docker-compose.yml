@@ -35,6 +35,8 @@ services:
         define('WP_ALLOW_MULTISITE', true);
     volumes:
       - wp_data:/var/www/html
+      # Must-use plugins auto-activate network-wide (e.g. the `movie` post type).
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins
 
   # One-shot initializer: installs WordPress core and the WPGraphQL plugin,
   # then exits. Idempotent — safe to run on every `up`.
@@ -60,9 +62,13 @@ services:
       WORDPRESS_ADMIN_USER: ${WORDPRESS_ADMIN_USER:-admin}
       WORDPRESS_ADMIN_PASSWORD: ${WORDPRESS_ADMIN_PASSWORD:-admin}
       WORDPRESS_ADMIN_EMAIL: ${WORDPRESS_ADMIN_EMAIL:-admin@example.com}
+      # Optional schema.org JSON feed imported on first-run setup (`wp schema import`).
+      WORDPRESS_IMPORT_FEED_URL: ${WORDPRESS_IMPORT_FEED_URL:-}
     volumes:
       - wp_data:/var/www/html
       - ./scripts:/scripts:ro
+      # So `wp rewrite flush` sees the movie post type's rewrite rules.
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins
     entrypoint: ["bash", "/scripts/setup.sh"]
 
 volumes:

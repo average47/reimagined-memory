@@ -1,0 +1,92 @@
+@theme {
+  /* Teal color palette (From Figma "Marketing Platform | Design System"). */
+  --color-teal-100: #cbfeea;
+  --color-teal-200: #97fddf;
+  --color-teal-300: #63f9da;
+  --color-teal-400: #3df4de;
+  --color-teal-500: #00eee6;
+  --color-teal-600: #009994;
+  --color-teal-700: #44737c;
+  --color-teal-800: #1c3b4a;
+  --color-teal-900: #0d253b;
+  /* Red color palette (From Figma "Marketing Platform | Design System"). */
+  --color-red-100: #fcdbc9;
+  --color-red-200: #f9af95;
+  --color-red-300: #ee785f;
+  --color-red-400: #de4537;
+  --color-red-500: #c80000;
+  --color-red-600: #ac000e;
+  --color-red-700: #900018;
+  --color-red-800: #74001e;
+  --color-red-900: #480013;
+  /* Blue color palette (From Figma "Marketing Platform | Design System"). */
+  --color-blue-100: #c6d3f6;
+  --color-blue-200: #90a8ed;
+  --color-blue-300: #5370c9;
+  --color-blue-400: #283f94;
+  --color-blue-500: #02114e;
+  --color-blue-600: #010d43;
+  --color-blue-700: #010938;
+  --color-blue-800: #00062d;
+  --color-blue-900: #000425;
+  /* Yellow color palette (From Figma "Marketing Platform | Design System"). */
+  --color-yellow-100: #fef7d4;
+  --color-yellow-200: #feedaa;
+  --color-yellow-300: #fde07f;
+  --color-yellow-400: #fbd35f;
+  --color-yellow-500: #f9be2b;
+  --color-yellow-600: #d69c1f;
+  --color-yellow-700: #b37c15;
+  --color-yellow-800: #905f0d;
+  --color-yellow-900: #774a08;
+  /* Lime color palette (From Figma "Marketing Platform | Design System"). */
+  --color-lime-100: #fdfdd1;
+  --color-lime-200: #fbfca5;
+  --color-lime-300: #f5f777;
+  --color-lime-400: #edf054;
+  --color-lime-500: #e2e71f;
+  --color-lime-600: #c1c616;
+  --color-lime-700: #a1a60f;
+  --color-lime-800: #818509;
+  --color-lime-900: #6b6e05;
+  /* Bronze color palette (From Figma "Marketing Platform | Design System"). */
+  --color-bronze-100: #f9eed1;
+  --color-bronze-200: #f4dba5;
+  --color-bronze-300: #deb772;
+  --color-bronze-400: #a26f30;
+  --color-bronze-500: #915d1c;
+  --color-bronze-600: #7c4914;
+  --color-bronze-700: #68380e;
+  --color-bronze-800: #542808;
+  --color-bronze-900: #451d05;
+  /* Grey color palette (From Figma "Marketing Platform | Design System"). */
+  --color-grey-100: #d6d6d6;
+  --color-grey-200: #cccccc;
+  --color-grey-300: #a3a3a3;
+  --color-grey-400: #999999;
+  --color-grey-500: #8f8f8f;
+  --color-grey-600: #6c6c6c;
+  --color-grey-700: #525252;
+  --color-grey-800: #333333;
+  --color-grey-900: #222222;
+  /* Black color palette (From Figma "Marketing Platform | Design System"). */
+  --color-black-08: #00000014;
+  --color-black-16: #00000029;
+  --color-black-24: #0000003d;
+  --color-black-32: #00000052;
+  --color-black-40: #00000066;
+  --color-black-48: #0000007a;
+  --color-black-56: #0000008f;
+  --color-black-64: #000000a3;
+  --color-black-100: #000000ff;
+  /* White color palette (From Figma "Marketing Platform | Design System"). */
+  --color-white-08: #ffffff14;
+  --color-white-16: #ffffff29;
+  --color-white-24: #ffffff3d;
+  --color-white-32: #ffffff52;
+  --color-white-40: #ffffff66;
+  --color-white-48: #ffffff7a;
+  --color-white-56: #ffffff8f;
+  --color-white-64: #ffffffa3;
+  --color-white-100: #ffffffff;
+}

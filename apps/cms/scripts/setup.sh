@@ -110,6 +110,15 @@ wp site list --field=url | while read -r site_url; do
   wp rewrite flush --url="${site_url}" >/dev/null 2>&1 || true
 done
 
+# 8. Optionally import a schema.org feed into the movie/tv_series/tv_season
+# types. Skipped when WORDPRESS_IMPORT_FEED_URL is unset; non-fatal on failure.
+if [ -n "${WORDPRESS_IMPORT_FEED_URL:-}" ]; then
+  echo "Importing schema.org feed into the primary site..."
+  wp schema import --url="${BASE_URL}" || echo "Feed import failed — continuing."
+else
+  echo "No WORDPRESS_IMPORT_FEED_URL set — skipping feed import."
+fi
+
 echo ""
 echo "Headless multi-tenant WordPress is ready. Tenants:"
 wp site list --fields=blog_id,url --format=table
