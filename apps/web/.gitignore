@@ -1,0 +1,5 @@
+# Machine-specific CA bundle for NODE_EXTRA_CA_CERTS (corporate proxy root).
+# Regenerate locally with:
+#   security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain > .certs/ca-bundle.pem
+#   security find-certificate -a -p /Library/Keychains/System.keychain >> .certs/ca-bundle.pem
+.certs/

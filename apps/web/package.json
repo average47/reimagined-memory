@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-.certs/ca-bundle.pem} next dev",
+    "build": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-.certs/ca-bundle.pem} next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

@@ -55,11 +55,19 @@
   --color-status-warning: #ff9f0a;
   --color-status-success: #30d158;
 
-  /* Font families (all Inter across roles) */
-  --font-headline: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-cta: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-badge: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Font families (all Inter across roles, self-hosted via next/font) */
+  --font-headline:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-body:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-cta:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-badge:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
 
   /* Font weights */
   --font-weight-regular: 400;
@@ -117,9 +125,9 @@
  * palette color. secondary/* and danger/* are shared across all brands.
  */
 @theme {
-  --color-primary-enabled: var(--color-bronze-500);
-  --color-primary-hover: var(--color-bronze-600);
-  --color-primary-active: var(--color-bronze-700);
+  --color-primary-enabled: var(--color-lime-500);
+  --color-primary-hover: var(--color-lime-600);
+  --color-primary-active: var(--color-lime-700);
   --color-primary-disabled: var(--color-grey-400);
   --color-secondary-enabled: var(--color-white-100);
   --color-secondary-hover: var(--color-grey-200);
@@ -137,9 +145,9 @@
  * primary palette differs per brand; amcplus uses the teal defaults above.
  */
 [data-brand='acorn'] {
-  --color-primary-enabled: var(--color-lime-500);
-  --color-primary-hover: var(--color-lime-600);
-  --color-primary-active: var(--color-lime-700);
+  --color-primary-enabled: var(--color-blue-500);
+  --color-primary-hover: var(--color-blue-600);
+  --color-primary-active: var(--color-blue-700);
 }
 
 [data-brand='amcplus'] {
