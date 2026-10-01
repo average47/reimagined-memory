@@ -292,56 +292,37 @@ export default async function StyleguidePage() {
               </div>
 
               <div className="space-y-4">
-                {/* <p className="font-headline text-(length:--text-11) leading-(--text-11--line-height) font-bold">
-                  H1 Heading
-                </p>
-                <p className="font-headline text-(length:--text-10) leading-(--text-10--line-height) font-light">
-                  H2 Heading
-                </p>
-                <p className="font-headline text-(length:--text-9) leading-(--text-9--line-height) font-light">
-                  H3 Heading
-                </p>
-                <p className="font-headline text-(length:--text-8) leading-(--text-8--line-height) font-medium">
-                  H4 Heading
-                </p>
-                <p className="font-headline text-(length:--text-7) leading-(--text-7--line-height) font-medium">
-                  H5 Heading
-                </p>
-                <p className="font-headline text-(length:--text-6) leading-(--text-6--line-height) font-medium">
-                  H6 Heading
-                </p> */}
-
-                <p className="max-w-[10ch] font-body text-11 text-text-primary">
+                <p className="font-headline text-(length:--text-11) leading-(--text-11--line-height)">
                   Text Size 11
                 </p>
-                <p className="max-w-[46ch] font-body text-10 text-text-primary">
+                <p className="font-headline text-(length:--text-10) leading-(--text-10--line-height)">
                   Text Size 10
                 </p>
-                <p className="max-w-[46ch] font-body text-9 text-text-primary">
+                <p className="font-headline text-(length:--text-9) leading-(--text-9--line-height)">
                   Text Size 9
                 </p>
-                <p className="max-w-[46ch] font-body text-8 text-text-primary">
+                <p className="font-headline text-(length:--text-8) leading-(--text-8--line-height)">
                   Text Size 8
                 </p>
-                <p className="max-w-[46ch] font-body text-7 text-text-primary">
+                <p className="font-headline text-(length:--text-7) leading-(--text-7--line-height)">
                   Text Size 7
                 </p>
-                <p className="max-w-[46ch] font-body text-6 text-text-primary">
+                <p className="font-headline text-(length:--text-6) leading-(--text-6--line-height)">
                   Text Size 6
                 </p>
-                <p className="max-w-[46ch] font-body text-5 text-text-primary">
+                <p className="font-headline text-(length:--text-5) leading-(--text-5--line-height)">
                   Text Size 5
                 </p>
-                <p className="max-w-[46ch] font-body text-4 text-text-primary">
+                <p className="font-headline text-(length:--text-4) leading-(--text-4--line-height)">
                   Text Size 4
                 </p>
-                <p className="max-w-[46ch] font-body text-3 text-text-primary">
+                <p className="font-headline text-(length:--text-3) leading-(--text-3--line-height)">
                   Text Size 3
                 </p>
-                <p className="max-w-[46ch] font-body text-2 text-text-primary">
+                <p className="font-headline text-(length:--text-2) leading-(--text-2--line-height)">
                   Text Size 2
                 </p>
-                <p className="max-w-[46ch] font-body text-1 text-text-primary">
+                <p className="font-headline text-(length:--text-1) leading-(--text-1--line-height)">
                   Text Size 1
                 </p>
               </div>
