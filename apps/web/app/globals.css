@@ -36,19 +36,15 @@
   --color-status-warning: #ff9f0a;
   --color-status-success: #30d158;
 
-  /* Font families (all Inter across roles, self-hosted via next/font) */
-  --font-headline:
-    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
-    sans-serif;
-  --font-body:
-    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
-    sans-serif;
-  --font-cta:
-    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
-    sans-serif;
-  --font-badge:
-    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
-    sans-serif;
+  /*
+   * Font families. All roles resolve to the --brand-font primitive
+   * (colors.css), which defaults to Inter and switches to Endurance Pro under
+   * [data-brand='amcplus']. Every role shares one family per the Figma tokens.
+   */
+  --font-headline: var(--brand-font);
+  --font-body: var(--brand-font);
+  --font-cta: var(--brand-font);
+  --font-badge: var(--brand-font);
 
   /* Font weights */
   --font-weight-regular: 400;

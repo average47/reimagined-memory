@@ -3,9 +3,5 @@ export default function amcplusLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div data-brand="amcplus">
-      <main>{children}</main>
-    </div>
-  );
+  return <main data-brand="amcplus">{children}</main>;
 }

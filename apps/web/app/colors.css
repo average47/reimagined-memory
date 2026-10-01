@@ -11,6 +11,16 @@
   --interface-offWhite: #e6e6e6;
   --interface-gray: #3b3b3b;
 
+  /*
+   * Brand font family. Defaults to Inter (self-hosted via next/font, exposed
+   * as --font-inter on <html>); brands override it in their [data-brand]
+   * block. The semantic font-* tokens in globals.css resolve to this, so a
+   * brand only has to swap the primitive — not fork component code.
+   */
+  --brand-font:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+
   /* Brand colors */
   [data-brand='acorn'] {
     --brand-primary: #fdb517;
@@ -19,6 +29,14 @@
   [data-brand='amcplus'] {
     --brand-primary: #00eee6;
     --brand-secondary: #0b1624;
+    /*
+     * AMC+ brand font (--font-endurance, loaded via next/font/google in
+     * app/layout.tsx — Oswald standing in for Endurance Pro). Falls back to
+     * Inter, then the system stack.
+     */
+    --brand-font:
+      var(--font-endurance), var(--font-inter), 'Inter', ui-sans-serif,
+      system-ui, -apple-system, sans-serif;
   }
   [data-brand='shudder'] {
     --brand-primary: #fdb517;
