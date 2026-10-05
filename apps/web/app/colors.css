@@ -30,9 +30,9 @@
     --brand-primary: #00eee6;
     --brand-secondary: #0b1624;
     /*
-     * AMC+ brand font (--font-endurance, loaded via next/font/google in
-     * app/layout.tsx — Oswald standing in for Endurance Pro). Falls back to
-     * Inter, then the system stack.
+     * AMC+ brand font (--font-endurance, self-hosted Endurance Pro loaded via
+     * next/font/local in app/layout.tsx). Falls back to Inter, then the system
+     * stack.
      */
     --brand-font:
       var(--font-endurance), var(--font-inter), 'Inter', ui-sans-serif,
