@@ -1,7 +1,13 @@
 import type { JSX } from 'react';
 import type { IconProps } from './Icon.types';
-//@ts-expect-error –- IGNORE error from import ---
-import sprite from './sprite.svg?url';
+// The sprite URL import differs by bundler: Next.js yields a static-asset
+// object ({ src }), while Vite (Ladle) yields the URL string directly.
+// Normalize to a plain string so the component renders under either.
+//@ts-expect-error –- no ambient type for the `?url` query import ---
+import spriteAsset from './sprite.svg?url';
+
+const spriteUrl: string =
+  typeof spriteAsset === 'string' ? spriteAsset : spriteAsset.src;
 
 export default function Icon({ ...props }: IconProps): JSX.Element {
   const sizes = () => {
@@ -26,7 +32,7 @@ export default function Icon({ ...props }: IconProps): JSX.Element {
       className={props.className}
       fill="currentColor"
     >
-      <use href={`${sprite.src}#${props.name}`} />
+      <use href={`${spriteUrl}#${props.name}`} />
     </svg>
   );
 }

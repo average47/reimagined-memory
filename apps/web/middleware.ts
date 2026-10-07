@@ -3,7 +3,7 @@ import { getHostname } from './lib/getHostname';
 import { getSiteConfig } from './lib/getSiteConfig';
 
 export const config = {
-  matcher: '/((?!api|static|.*\\..*|_next|ifc|marketing).*)',
+  matcher: '/((?!api|static|.*\\..*|_next|ifc|marketing|styleguide).*)',
 };
 
 export function middleware(request: NextRequest) {

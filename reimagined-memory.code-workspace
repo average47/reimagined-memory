@@ -5,6 +5,10 @@
       "path": "./apps/web",
     },
     {
+      "name": "Style Guide (Ladle)",
+      "path": "./apps/ladel",
+    },
+    {
       "name": "Dev Proxy",
       "path": "./apps/proxy",
     },

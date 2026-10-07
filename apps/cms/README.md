@@ -1,7 +1,7 @@
 # cms — Headless, multi-tenant WordPress
 
 A headless WordPress **Multisite** network for the monorepo, run entirely in
-Docker. One install serves **four tenants** (sites); each serves content over its
+Docker. One install serves **five tenants** (sites); each serves content over its
 REST API and a GraphQL endpoint (via [WPGraphQL](https://www.wpgraphql.com/)).
 The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant frontend.
 
@@ -15,7 +15,7 @@ The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant fronten
 
 ## Tenants
 
-Subdirectory Multisite — all four sites share one origin:
+Subdirectory Multisite — all five sites share one origin:
 
 | Tenant        | URL                             | GraphQL                              |
 | ------------- | ------------------------------- | ------------------------------------ |
@@ -23,6 +23,7 @@ Subdirectory Multisite — all four sites share one origin:
 | Shudder       | http://localhost/shudder/       | http://localhost/shudder/graphql     |
 | Acorn         | http://localhost/acorn/         | http://localhost/acorn/graphql       |
 | Sundance Now  | http://localhost/sundancenow/   | http://localhost/sundancenow/graphql |
+| We TV         | http://localhost/wetv/          | http://localhost/wetv/graphql        |
 
 REST is likewise per-tenant, e.g. `http://localhost/shudder/wp-json/wp/v2`.
 
@@ -35,12 +36,12 @@ docker compose logs -f wp-cli # watch first-run setup finish
 ```
 
 On first launch the `wp-cli` service installs WordPress core, converts it to a
-subdirectory Multisite network, creates the three additional tenant sites,
+subdirectory Multisite network, creates the four additional tenant sites,
 network-activates WPGraphQL, writes the multisite `.htaccess`, and flushes
 rewrites. It is idempotent — safe to leave in place across restarts.
 
 - **Admin:** http://localhost/wp-admin (default `admin` / `admin`) — the Network
-  Admin manages all four sites.
+  Admin manages all five sites.
 
 > **Port 80 is required.** Subdirectory Multisite stores the network domain
 > without a port, so WordPress's site lookups break on a custom port. If port 80
@@ -69,7 +70,7 @@ WORDPRESS_BASE_URL=http://localhost
 ```
 
 The web app's data fetcher lives in `apps/web/lib/wordpress.ts`; the `/posts`
-page demonstrates switching between all four tenants.
+page demonstrates switching between all five tenants.
 
 ## Content types
 

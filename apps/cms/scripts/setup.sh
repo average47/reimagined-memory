@@ -4,7 +4,7 @@
 # - Waits for wp-config.php (written by the wordpress container) and the DB.
 # - Installs WordPress core on first run.
 # - Converts the install into a subdirectory Multisite network.
-# - Creates the additional tenant sites (4 total).
+# - Creates the additional tenant sites (5 total).
 # - Network-activates WPGraphQL so every tenant exposes /graphql.
 # - Writes the subdirectory-multisite .htaccess and flushes rewrites.
 set -euo pipefail
@@ -12,13 +12,14 @@ set -euo pipefail
 BASE_URL="${WORDPRESS_SITE_URL}"
 
 # Additional tenants beyond the primary site. "slug:Title" pairs.
-# The primary (network) site is AMC+; these three make four tenants total.
+# The primary (network) site is AMC+; these four make five tenants total.
 # Existing sites are left untouched (matched by path), so titles set in the
 # admin are preserved.
 TENANTS=(
   "shudder:Shudder"
   "acorn:Acorn"
   "sundancenow:Sundance Now"
+  "wetv:We TV"
 )
 
 echo "Waiting for wp-config.php..."

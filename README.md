@@ -38,13 +38,13 @@ To work on a single package, use pnpm filters, e.g. `pnpm --filter web dev`.
 
 ## Packages
 
-- **`@repo/ui`** — React components (`Button`, `Card`, …) styled with Tailwind.
+- **`@repo/ui`** — React components (`Icon`, …) styled with Tailwind.
 - **`@repo/utils`** — helpers like `cn`, `formatCurrency`, `formatDate`, `truncate`.
 
 ## Headless CMS (multi-tenant)
 
 `apps/cms` runs a headless WordPress **Multisite** network in Docker (WordPress +
-MariaDB, WPGraphQL auto-installed) serving **four tenants**. Requires Docker and
+MariaDB, WPGraphQL auto-installed) serving **five tenants**. Requires Docker and
 port 80.
 
 ```bash
@@ -53,11 +53,12 @@ pnpm --filter cms down    # stop it
 ```
 
 Tenants (subdirectory multisite): `/` (AMC+), `/shudder`, `/acorn`,
-`/sundancenow` — each with its own `…/graphql` and `…/wp-json/wp/v2` endpoints.
+`/sundancenow`, `/wetv` — each with its own `…/graphql` and `…/wp-json/wp/v2`
+endpoints.
 
 The web app talks to it via [apps/web/lib/wordpress.ts](apps/web/lib/wordpress.ts)
 (set `WORDPRESS_BASE_URL`); the [/posts](apps/web/app/posts/page.tsx) page
-switches between all four tenants. See [apps/cms/README.md](apps/cms/README.md)
+switches between all five tenants. See [apps/cms/README.md](apps/cms/README.md)
 for full details.
 
 ## MCP servers
