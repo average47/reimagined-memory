@@ -51,35 +51,80 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/Hero — ReactNode text props stored as strings; the
+		// background and logo are URLs. (onCtaClick has no serializable form.)
+		'mosaic/hero' => array(
+			'script'     => 'hero',
+			'attributes' => array(
+				'backgroundSrc' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'logoSrc' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'logoAlt' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'title' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'description' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'priceText' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'legal' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaLabel' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaHref' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
 	);
 }
 
 /**
- * Minimal server render for `mosaic/button`: a link or button carrying the
- * attributes as data, for non-headless consumers and previews.
+ * Headless render payload for a Mosaic block.
  *
- * @param array $attributes Saved block attributes.
+ * The PHP render is intentionally minimal — the frontend owns presentation — so
+ * each block emits an empty placeholder carrying its block name and the full set
+ * of (serializable) attributes as JSON. The `apps/web` switcher
+ * (components/MosaicContent.tsx) finds `[data-mosaic-block]` nodes in a post's
+ * rendered content and swaps each for the real `@repo/ui` component, passing
+ * `data-mosaic-props` as its props.
+ *
+ * @param string $name       Block name, e.g. `mosaic/button`.
+ * @param array  $attributes Saved block attributes (full set, defaults merged).
  * @return string
  */
-function mosaic_render_button( $attributes ) {
-	$label   = esc_html( $attributes['label'] ?? '' );
-	$variant = esc_attr( $attributes['variant'] ?? 'primary' );
-	$href    = $attributes['href'] ?? '';
-
-	if ( '' !== $href ) {
-		return sprintf(
-			'<a data-component="Button" data-variant="%s" href="%s">%s</a>',
-			$variant,
-			esc_url( $href ),
-			$label
-		);
-	}
-
+function mosaic_render_block( $name, $attributes ) {
 	return sprintf(
-		'<button type="button" data-component="Button" data-variant="%s">%s</button>',
-		$variant,
-		$label
+		'<div data-mosaic-block="%s" data-mosaic-props="%s"></div>',
+		esc_attr( $name ),
+		esc_attr( wp_json_encode( (object) $attributes ) )
 	);
+}
+
+function mosaic_render_button( $attributes ) {
+	return mosaic_render_block( 'mosaic/button', $attributes );
+}
+
+function mosaic_render_hero( $attributes ) {
+	return mosaic_render_block( 'mosaic/hero', $attributes );
 }
 
 add_action(
@@ -87,6 +132,7 @@ add_action(
 	function () {
 		$renderers = array(
 			'mosaic/button' => 'mosaic_render_button',
+			'mosaic/hero'   => 'mosaic_render_hero',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {
