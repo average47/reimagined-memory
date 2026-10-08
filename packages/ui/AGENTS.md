@@ -39,6 +39,10 @@ Rules:
    `apps/cms` — see [WordPress block](#4-wordpress-block-appscms). A component is
    not complete without it: creating a component includes creating its block,
    and changing a component's props includes updating the block in the same change.
+7. **Ship a Ladle story.** Every component has a story at
+   `apps/ladle/src/<Name>.stories.tsx` — see [Ladle story](#5-ladle-story-appsladle).
+   Creating a component includes writing its story, and changing its props or
+   variants includes updating the story in the same change.
 
 ### Component conventions
 
@@ -214,19 +218,49 @@ block in the same change — add/remove/rename attributes, update defaults, and
 keep enum values in sync. A prop change without the matching block update is an
 incomplete change.
 
-## 5. Verify before you call it done
+## 5. Ladle story (apps/ladle)
 
-1. **Typecheck both** the package and the app:
-   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck`.
-2. **Render it.** Add the component to the style guide
-   (`apps/web/app/styleguide/page.tsx`) across its meaningful variants, run the
-   dev server, and confirm it renders without errors.
+The style guide is the [Ladle](https://ladle.dev/) workbench in `apps/ladle`
+(served at `/styleguide`). Every component gets a story file there so it can be
+developed, reviewed, and visually checked in isolation, under every brand.
+
+- **Location & naming.** `apps/ladle/src/<Name>.stories.tsx` (PascalCase,
+  matching the component folder). Ladle picks up `src/**/*.stories.tsx`
+  automatically — no registration step.
+- **Shape.** Follow `apps/ladle/src/Icon.stories.tsx`: a default export with
+  `title: '<Name>'`, then one named `Story` export (typed with
+  `import type { Story } from '@ladle/react'`) per meaningful variant or state,
+  each with a short `/** … */` comment saying what it demonstrates.
+- **Import from `@repo/ui`**, not a relative path into `packages/ui`, so the
+  story exercises the public barrel.
+- **Cover the API, not the Figma matrix.** At minimum a `Default` story, plus
+  stories for each meaningful prop variant/state (sizes, tones, disabled,
+  loading, empty/long content). Responsiveness is checked by resizing the
+  viewport, not by separate "Mobile"/"Desktop" stories.
+- **Tokens only.** Any wrapper/layout markup in the story uses the same
+  design-token utilities as components — no hardcoded hex/px.
+- **Dynamic imagery via args.** Pass realistic placeholder values for image/text
+  props; don't add assets to `packages/ui` just for a story.
+
+**When updating a component:** adding, removing, or renaming a prop or variant
+means updating its story in the same change.
+
+## 6. Verify before you call it done
+
+1. **Typecheck all three** — the package, the app, and the workbench:
+   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck && pnpm --filter ladle typecheck`.
+2. **Render it in Ladle.** Run `pnpm --filter ladle dev`, open
+   http://localhost:61000/styleguide/, and confirm every story for the
+   component renders without console errors. Spot-check under another brand by
+   appending `?brand=amcplus`.
 3. **Visually check against the design.** A headless screenshot works without a
-   browser dependency:
+   browser dependency (Ladle story URLs are `?story=<title>--<story-name>` in
+   kebab-case, e.g. `?story=icon--sizes`; add `&mode=preview` to hide the
+   Ladle chrome):
    ```
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
      --headless --disable-gpu --hide-scrollbars --window-size=760,2750 \
-     --screenshot=/tmp/sg.png "http://localhost:3000/styleguide"
+     --screenshot=/tmp/sg.png "http://localhost:61000/styleguide/?story=<name>--default&mode=preview"
    ```
    Compare every static asset's slot, proportions, and the overall layout to the
    Figma render. Note (don't silently fix) any pre-existing out-of-scope issues.

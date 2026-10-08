@@ -23,8 +23,13 @@ Essentials (see that file for the full rules and the hard-won gotchas):
 - **Matching WordPress block.** Every component has a companion PHP dynamic block
   (mu-plugin) in `apps/cms` whose attributes mirror its props. Creating a
   component includes creating its block; changing props includes updating it.
+- **Ladle story.** Every component has a story at
+  `apps/ladle/src/<Name>.stories.tsx` covering its meaningful variants.
+  Creating a component includes writing its story; changing props or variants
+  includes updating it.
 - **Figma work:** load `/figma-design-to-code` before `get_design_context` (and
   `/figma-use` before `use_figma`); reuse existing components and the icon sprite
   before generating markup; keep prop/data imagery dynamic.
-- **Verify:** typecheck both packages, render in `apps/web/app/styleguide`, and
-  visually check against the design before finishing.
+- **Verify:** typecheck `@repo/ui`, `web`, and `ladle`, render the component's
+  stories in Ladle (`pnpm --filter ladle dev`), and visually check against the
+  design before finishing.
