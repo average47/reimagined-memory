@@ -2,6 +2,30 @@
 
 A TypeScript + Tailwind monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/).
 
+## Getting started
+
+**Prerequisites:** [Node](https://nodejs.org) ≥ 20 and [pnpm](https://pnpm.io)
+10.8 (`corepack enable` provides the pinned version). Docker is only needed for
+the optional [headless CMS](#headless-cms-multi-tenant).
+
+```bash
+pnpm install   # install all workspace dependencies
+pnpm dev       # start web (:3000), the brand proxy (:3001) and Ladle (:61000)
+```
+
+Then open the app **through the proxy** so brand theming resolves from the
+subdomain:
+
+- App — http://amcplus.localhost:3001 (swap the subdomain for any brand:
+  `shudder`, `acorn`, `sundancenow`, `wetv` — see
+  [Local dev proxy](#local-dev-proxy-brand-subdomains))
+- Component workbench — http://amcplus.localhost:3001/styleguide
+
+Opening http://localhost:3000 directly also works but defaults to the AMC+
+brand, since brand resolution relies on the `*.localhost` subdomains the proxy
+provides. The CMS is **not** started by `pnpm dev` — run it separately when you
+need WordPress-backed content (see [Headless CMS](#headless-cms-multi-tenant)).
+
 ## Structure
 
 ```
