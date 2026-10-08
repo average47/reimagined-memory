@@ -229,6 +229,19 @@ docker compose run --rm --entrypoint wp wp-cli schema import \
 (The `wp` binary lives in the `wp-cli` service, so `run --entrypoint wp` is used
 rather than `exec`.)
 
+## Blocks
+
+`mu-plugins/blocks.php` registers one `mosaic/*` dynamic block per `@repo/ui`
+component so editors can place components in content; the frontend reads the
+saved attributes and renders the real component. Attributes mirror the
+component's serializable props. Each block also has a plain-JS editor script in
+`mu-plugins/blocks/<name>-editor.js` (no build step) so it appears in the
+inserter.
+
+| Block | Component | Attributes |
+| --- | --- | --- |
+| `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
+
 ## Notes
 
 - Data lives in the `db_data` and `wp_data` Docker volumes. `clean` deletes them.
