@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
-// Ladle automatically picks up this Vite config. We add the Tailwind v4 plugin
-// so stories render with the same utilities/tokens as the app.
+// Storybook's react-vite builder merges this config, so the Tailwind v4 plugin
+// here is what makes stories render with the same utilities/tokens as the app.
 export default defineConfig({
   plugins: [tailwindcss()],
   server: {

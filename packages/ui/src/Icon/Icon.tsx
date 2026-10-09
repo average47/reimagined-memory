@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import type { IconProps } from './Icon.types';
 // The sprite URL import differs by bundler: Next.js yields a static-asset
-// object ({ src }), while Vite (Ladle) yields the URL string directly.
+// object ({ src }), while Vite (Storybook) yields the URL string directly.
 // Normalize to a plain string so the component renders under either.
 //@ts-expect-error –- no ambient type for the `?url` query import ---
 import spriteAsset from './sprite.svg?url';

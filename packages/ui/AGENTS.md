@@ -39,10 +39,11 @@ Rules:
    `apps/cms` — see [WordPress block](#4-wordpress-block-appscms). A component is
    not complete without it: creating a component includes creating its block,
    and changing a component's props includes updating the block in the same change.
-7. **Ship a Ladle story.** Every component has a story at
-   `apps/ladle/src/<Name>.stories.tsx` — see [Ladle story](#5-ladle-story-appsladle).
-   Creating a component includes writing its story, and changing its props or
-   variants includes updating the story in the same change.
+7. **Ship a Storybook story.** Every component has a story at
+   `apps/styleguide/src/<Name>.stories.tsx` — see
+   [Storybook story](#5-storybook-story-appsstyleguide). Creating a component
+   includes writing its story, and changing its props or variants includes
+   updating the story in the same change.
 
 ### Component conventions
 
@@ -218,19 +219,30 @@ block in the same change — add/remove/rename attributes, update defaults, and
 keep enum values in sync. A prop change without the matching block update is an
 incomplete change.
 
-## 5. Ladle story (apps/ladle)
+## 5. Storybook story (apps/styleguide)
 
-The style guide is the [Ladle](https://ladle.dev/) workbench in `apps/ladle`
-(served at `/styleguide`). Every component gets a story file there so it can be
-developed, reviewed, and visually checked in isolation, under every brand.
+The style guide is the [Storybook](https://storybook.js.org/) workbench in
+`apps/styleguide` (served at `/styleguide`). Every component gets a story file
+there so it can be developed, reviewed, and visually checked in isolation,
+under every brand.
 
-- **Location & naming.** `apps/ladle/src/<Name>.stories.tsx` (PascalCase,
-  matching the component folder). Ladle picks up `src/**/*.stories.tsx`
+- **Location & naming.** `apps/styleguide/src/<Name>.stories.tsx` (PascalCase,
+  matching the component folder). Storybook picks up `src/**/*.stories.tsx`
   automatically — no registration step.
-- **Shape.** Follow `apps/ladle/src/Icon.stories.tsx`: a default export with
-  `title: '<Name>'`, then one named `Story` export (typed with
-  `import type { Story } from '@ladle/react'`) per meaningful variant or state,
-  each with a short `/** … */` comment saying what it demonstrates.
+- **Shape.** [CSF 3](https://storybook.js.org/docs/api/csf). Follow
+  `apps/styleguide/src/Icon.stories.tsx`: a `meta` object (`title: '<Name>'`,
+  `component`, shared `args`/`argTypes`) exported as the default via
+  `satisfies Meta<typeof X>`, then one `StoryObj<typeof meta>` export per
+  meaningful variant or state, each with a short `/** … */` comment saying what
+  it demonstrates.
+- **Prefer `args` over `render`.** Passing props as `args` is what generates the
+  controls and the prop table; reach for `render` only when a story shows
+  several instances at once (e.g. a variants showcase).
+- **Mind two Storybook-specific gotchas.** Per-story canvas backgrounds are a
+  **global**, not a parameter (`globals: { backgrounds: { value: 'surface' } }`).
+  And a component whose props are a discriminated union (like `Button`) makes
+  Storybook's arg types collapse to `never` — type the meta against one branch
+  (`Meta<ButtonAsButtonProps>`) and cover the other with a `render` story.
 - **Import from `@repo/ui`**, not a relative path into `packages/ui`, so the
   story exercises the public barrel.
 - **Cover the API, not the Figma matrix.** At minimum a `Default` story, plus
@@ -248,20 +260,27 @@ means updating its story in the same change.
 ## 6. Verify before you call it done
 
 1. **Typecheck all three** — the package, the app, and the workbench:
-   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck && pnpm --filter ladle typecheck`.
-2. **Render it in Ladle.** Run `pnpm --filter ladle dev`, open
-   http://localhost:61000/styleguide/, and confirm every story for the
-   component renders without console errors. Spot-check under another brand by
-   appending `?brand=amcplus`.
+   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck && pnpm --filter styleguide typecheck`.
+2. **Render it in Storybook.** Run `pnpm --filter styleguide dev`, open
+   http://localhost:61000/, and confirm every story for the component renders
+   without console errors. Spot-check under another brand with the **Brand**
+   toolbar (or by appending `?brand=amcplus`), and check the **Accessibility**
+   panel for new violations.
 3. **Visually check against the design.** A headless screenshot works without a
-   browser dependency (Ladle story URLs are `?story=<title>--<story-name>` in
-   kebab-case, e.g. `?story=icon--sizes`; add `&mode=preview` to hide the
-   Ladle chrome):
+   browser dependency. Render the story on its own via `/iframe.html?id=<id>`,
+   where the id is `<title>--<story-name>` in kebab-case (e.g.
+   `icon--sizes`, `button--as-link`); that skips the Storybook chrome. Globals
+   go in one `&globals=` param, semicolon-separated:
    ```
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-     --headless --disable-gpu --hide-scrollbars --window-size=760,2750 \
-     --screenshot=/tmp/sg.png "http://localhost:61000/styleguide/?story=<name>--default&mode=preview"
+     --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
+     --user-data-dir=/tmp/sg-profile --virtual-time-budget=8000 \
+     --window-size=760,2750 --screenshot=/tmp/sg.png \
+     "http://localhost:61000/iframe.html?id=<name>--default&globals=brand:amcplus"
    ```
+   - `--user-data-dir` is required if Chrome is already running, and
+     `--virtual-time-budget` makes it exit once the story has rendered;
+     without them the command hangs and writes no file.
    Compare every static asset's slot, proportions, and the overall layout to the
    Figma render. Note (don't silently fix) any pre-existing out-of-scope issues.
    - **macOS headless caveat:** Chrome enforces a ~500px minimum window width,
