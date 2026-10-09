@@ -1,3 +1,14 @@
 packages:
   - "apps/*"
   - "packages/*"
+# pnpm 10 only warned about dependencies whose install scripts it skipped; pnpm
+# 12 fails the install (ERR_PNPM_IGNORED_BUILDS) until each one is decided here.
+# Every postinstall below only locates or verifies a prebuilt native binary that
+# the package already pulls in as a platform-specific optional dependency, so
+# they stay denied — which is how this workspace has always been installed.
+# Managed by `pnpm approve-builds`.
+allowBuilds:
+  '@swc/core': false
+  esbuild: false
+  msw: false
+  unrs-resolver: false

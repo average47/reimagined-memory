@@ -2,7 +2,7 @@
   "name": "reimagined-memory",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": ">=20"
   },
