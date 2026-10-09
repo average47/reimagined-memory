@@ -33,6 +33,10 @@ services:
       # Required so wp-cli can convert the install into a multisite network.
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_ALLOW_MULTISITE', true);
+      # Frontend origins for the "View Page" links, as `brand=origin` pairs.
+      # Empty falls back to the local dev proxy — see
+      # mu-plugins/headless-permalinks.php.
+      MOSAIC_FRONTEND_ORIGINS: ${MOSAIC_FRONTEND_ORIGINS:-}
     volumes:
       - wp_data:/var/www/html
       # Must-use plugins auto-activate network-wide (e.g. the `movie` post type).
