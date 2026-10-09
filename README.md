@@ -2,11 +2,26 @@
 
 A TypeScript + Tailwind monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/).
 
+> **Install pnpm 12.10.1 globally:** `npm install -g pnpm@12.10.1`
+>
+> This repo pins `packageManager` to pnpm 12.10.1. pnpm 12 ships as a native
+> binary, and both of the usual ways of picking up a pinned version currently
+> mishandle it:
+>
+> - Corepack (0.33.0) fails with `Cannot find module
+>   .../pnpm/12.10.1/bin/pnpm.cjs` — the JS entry point pnpm 12 no longer ships.
+> - pnpm's own version switching fails with `ENOEXEC` — it downloads the package
+>   but skips the postinstall that puts the native binary in place, leaving a
+>   placeholder text file at `bin/pnpm`.
+>
+> Installing globally means the running version already matches the pin, so
+> neither path is taken. `npm` runs the postinstall correctly.
+
 ## Getting started
 
 **Prerequisites:** [Node](https://nodejs.org) ≥ 20 and [pnpm](https://pnpm.io)
-10.8 (`corepack enable` provides the pinned version). Docker is only needed for
-the optional [headless CMS](#headless-cms-multi-tenant).
+12.10.1 (see the note above). Docker is only needed for the optional
+[headless CMS](#headless-cms-multi-tenant).
 
 ```bash
 pnpm install   # install all workspace dependencies
