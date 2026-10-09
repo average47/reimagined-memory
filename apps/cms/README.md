@@ -72,6 +72,53 @@ WORDPRESS_BASE_URL=http://localhost
 The web app's data fetcher lives in `apps/web/lib/wordpress.ts`; the `/posts`
 page demonstrates switching between all five tenants.
 
+## "View Page" opens the frontend
+
+`mu-plugins/headless-permalinks.php` repoints WordPress's view affordances at
+`apps/web`, so editors land on the real site instead of WordPress's theme. It
+filters `get_permalink()`, which covers all of them at once: the **View** row
+action in the posts/pages list, the admin bar's **View Page**, the editor's
+**View Page** link, and the "Page published." notice.
+
+The target is `<frontend origin>/<slug>` — `apps/web` resolves content by slug
+alone (middleware rewrites `/<slug>` to `/sites/<brand>/<slug>`), so the post
+type and page hierarchy don't affect the URL.
+
+Each tenant maps to its own brand origin, defaulting to the local dev proxy
+(`apps/proxy`):
+
+| Tenant | "View Page" target |
+| --- | --- |
+| AMC+ (main) | http://amcplus.localhost:3001/&lt;slug&gt; |
+| Shudder | http://shudder.localhost:3001/&lt;slug&gt; |
+| Acorn | http://acorn.localhost:3001/&lt;slug&gt; |
+| Sundance Now | http://sundancenow.localhost:3001/&lt;slug&gt; |
+| We TV | http://wetv.localhost:3001/&lt;slug&gt; |
+
+Point it at deployed frontends with the `MOSAIC_FRONTEND_ORIGINS` env var — a
+comma-separated list of `brand=origin` pairs. Unlisted brands keep their
+default:
+
+```yaml
+# docker-compose.yml, under the `wordpress` service
+environment:
+  MOSAIC_FRONTEND_ORIGINS: amcplus=https://amcplus.com,shudder=https://shudder.com,acorn=https://acorn.tv
+```
+
+Three things it deliberately leaves alone:
+
+- **The content API.** The filters only run for admin and REST requests, so
+  WPGraphQL's `uri`/`link` fields — what `apps/web` actually reads — stay as
+  WordPress generates them.
+- **Preview.** The **Preview** button still opens WordPress. `apps/web` resolves
+  pages over the public GraphQL endpoint and has no draft-preview route, so a
+  frontend preview link would render "no content found" for exactly the
+  unpublished posts preview exists to show.
+- **"Visit Site"** and `home_url()`, which is what builds the REST and GraphQL
+  endpoint URLs — rewriting those would break the content API.
+
+Media keeps WordPress URLs too, since the frontend has no attachment route.
+
 ## Content types
 
 ### Movie (`movie`)
