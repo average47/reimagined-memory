@@ -1,26 +1,29 @@
 {
-  "name": "ladle",
+  "name": "styleguide",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ladle serve",
-    "build": "ladle build",
-    "preview": "ladle preview",
+    "dev": "storybook dev --port 61000 --exact-port --no-open",
+    "build": "storybook build",
+    "preview": "vite preview --outDir storybook-static --port 61000",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .turbo node_modules build"
+    "clean": "rm -rf .turbo node_modules storybook-static"
   },
   "dependencies": {
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*"
   },
   "devDependencies": {
-    "@ladle/react": "^4.1.0",
+    "@storybook/addon-a11y": "^10.6.1",
+    "@storybook/addon-docs": "^10.6.1",
+    "@storybook/react-vite": "^10.6.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "storybook": "^10.6.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.0"

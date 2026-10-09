@@ -1,10 +1,10 @@
 /*
  * Reuse the web app's Tailwind entrypoint as the single source of truth: it
  * imports Tailwind, the brand primitives (colors.css) and the @theme token
- * mappings, and scans packages/ui for class usage. We only add Ladle's own
- * story files as an extra content source so their utility classes are emitted.
+ * mappings, and scans packages/ui for class usage. We only add this app's own
+ * files as extra content sources so their utility classes are emitted too.
  */
 @import '../../web/app/globals.css';
 
 @source './**/*.{ts,tsx}';
-@source '../.ladle/**/*.{ts,tsx}';
+@source '../.storybook/**/*.{ts,tsx}';

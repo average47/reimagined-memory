@@ -25,7 +25,7 @@ A TypeScript + Tailwind monorepo managed with [pnpm workspaces](https://pnpm.io/
 
 ```bash
 pnpm install   # install all workspace dependencies
-pnpm dev       # start web (:3000), the brand proxy (:3001) and Ladle (:61000)
+pnpm dev       # start web (:3000), the brand proxy (:3001) and Storybook (:61000)
 ```
 
 Then open the app **through the proxy** so brand theming resolves from the
@@ -48,8 +48,8 @@ need WordPress-backed content (see [Headless CMS](#headless-cms-multi-tenant)).
 ├── apps/
 │   ├── web/          # Next.js 15 app (App Router, Tailwind v4)
 │   ├── cms/          # Headless WordPress (Docker: WordPress + MariaDB + WPGraphQL)
-│   ├── proxy/        # Local dev proxy — brand *.localhost subdomains → web / Ladle
-│   └── ladle/        # Ladle component workbench (served at /styleguide)
+│   ├── proxy/        # Local dev proxy — brand *.localhost subdomains → web / Storybook
+│   └── styleguide/   # Storybook component workbench (served at /styleguide)
 ├── packages/
 │   ├── ui/           # @repo/ui — shared React component library
 │   └── utils/        # @repo/utils — framework-agnostic TypeScript helpers
@@ -86,10 +86,10 @@ To work on a single package, use pnpm filters, e.g. `pnpm --filter web dev`.
 
 The app is multi-tenant and resolves the active brand from the hostname. To
 exercise that locally, `apps/proxy` is a small HTTP proxy that maps brand
-`*.localhost` subdomains onto the Next.js app (and the Ladle workbench).
+`*.localhost` subdomains onto the Next.js app (and the Storybook workbench).
 
 `pnpm dev` at the repo root starts everything together (Next on `:3000`, this
-proxy on `:3001`, Ladle on `:61000`). Then browse the app through the proxy:
+proxy on `:3001`, Storybook on `:61000`). Then browse the app through the proxy:
 
 | URL                                      | Serves                                  |
 | ---------------------------------------- | --------------------------------------- |
@@ -98,23 +98,27 @@ proxy on `:3001`, Ladle on `:61000`). Then browse the app through the proxy:
 | http://acorn.localhost:3001              | Next.js, themed as Acorn                |
 | http://sundancenow.localhost:3001        | Next.js, themed as Sundance Now         |
 | http://wetv.localhost:3001               | Next.js, themed as We TV                |
-| http://&lt;brand&gt;.localhost:3001/styleguide | Ladle component workbench, themed to the brand |
+| http://&lt;brand&gt;.localhost:3001/styleguide | Storybook component workbench, themed to the brand |
 
 How it works ([apps/proxy/index.mjs](apps/proxy/index.mjs)):
 
 - Each `<brand>.localhost` is rewritten to the real brand hostname (e.g.
   `amcplus.com`) via the `Host` header, which the Next.js middleware uses to pick
   the brand — so visiting the subdomain renders that tenant.
-- Requests to `/styleguide*` are routed to the Ladle app (`:61000`) instead of
-  Next; Ladle reads the brand from the subdomain and themes accordingly. See
-  [apps/ladle/README.md](apps/ladle/README.md).
+- Requests to `/styleguide*` are routed to the Storybook app (`:61000`) instead
+  of Next, with the `/styleguide` prefix stripped — Storybook's dev server has
+  no `base` option and only serves from the root. The root-absolute URLs its
+  preview iframe requests (`/@vite/client`, `/sb-manager/*`, …) are matched back
+  to the workbench by their `Referer`. Storybook reads the brand from the
+  subdomain and themes accordingly. See
+  [apps/styleguide/README.md](apps/styleguide/README.md).
 
-Ports are overridable with the `NEXT_PORT`, `PROXY_PORT`, and `LADLE_PORT` env
-vars. Run the proxy alone with `pnpm --filter proxy dev`.
+Ports are overridable with the `NEXT_PORT`, `PROXY_PORT`, and `STORYBOOK_PORT`
+env vars. Run the proxy alone with `pnpm --filter proxy dev`.
 
 > **Note:** the proxy forwards HTTP only (no WebSocket upgrade), so Vite HMR for
-> Ladle doesn't fire through it — develop components directly at
-> http://localhost:61000/styleguide/ for live reload.
+> Storybook doesn't fire through it — develop components directly at
+> http://localhost:61000/ for live reload.
 
 ## Headless CMS (multi-tenant)
 
