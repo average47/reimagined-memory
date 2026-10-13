@@ -40,9 +40,10 @@ Rules:
    not complete without it: creating a component includes creating its block,
    and changing a component's props includes updating the block in the same change.
 7. **Ship a Storybook story.** Every component has a story at
-   `apps/storybook/src/<Name>.stories.tsx` — see [Storybook story](#5-storybook-story-appsstorybook).
-   Creating a component includes writing its story, and changing its props or
-   variants includes updating the story in the same change.
+   `apps/styleguide/src/<Name>.stories.tsx` — see
+   [Storybook story](#5-storybook-story-appsstyleguide). Creating a component
+   includes writing its story, and changing its props or variants includes
+   updating the story in the same change.
 
 ### Component conventions
 
@@ -211,20 +212,6 @@ bind-mounted (edits are live on the next request), and needs **no JS/build step*
   real React UI lives in `apps/web`, so don't try to render it here) and
   `save: () => null` (dynamic block). Enqueue it from `blocks.php` on
   `enqueue_block_editor_assets` with the right `wp-*` script dependencies.
-- **Media fields accept Media Library picks *and* a URL.** Any image/media
-  attribute (e.g. `backgroundSrc`, `logoSrc`) must let an editor **either** pick
-  from the WordPress uploaded media **or** paste a URL — never a URL-only text
-  input. Pair a `wp.blockEditor.MediaUpload` (wrapped in `MediaUploadCheck`) that
-  writes the selected attachment's URL into the attribute with a `TextControl`
-  bound to the same attribute for manual URLs; add `wp-media-utils` to the
-  script's dependencies. Since the attribute stays a plain URL string, the
-  component and `render_callback` are unchanged.
-- **The preview reflects the entered text.** The `edit` preview must render every
-  text attribute an author fills in (headline, subheader, body copy, pricing,
-  legal, labels, …), bound live to the attributes — not a static stand-in. Show a
-  muted placeholder for a field only while it's empty. Authors should see their
-  actual content in the canvas, so no filled-out text field is silently dropped
-  from the preview.
 - **Document it** in `apps/cms/README.md` alongside the content types.
 
 **When updating a component:** editing `<Name>.types.ts` props means editing the
@@ -232,21 +219,30 @@ block in the same change — add/remove/rename attributes, update defaults, and
 keep enum values in sync. A prop change without the matching block update is an
 incomplete change.
 
-## 5. Storybook story (apps/storybook)
+## 5. Storybook story (apps/styleguide)
 
 The style guide is the [Storybook](https://storybook.js.org/) workbench in
-`apps/storybook` (served at `/styleguide`). Every component gets a story file
-there so it can be developed, reviewed, and visually checked in isolation, under
-every brand.
+`apps/styleguide` (served at `/styleguide`). Every component gets a story file
+there so it can be developed, reviewed, and visually checked in isolation,
+under every brand.
 
-- **Location & naming.** `apps/storybook/src/<Name>.stories.tsx` (PascalCase,
-  matching the component folder). Picked up via `src/**/*.stories.tsx` — no
-  registration step.
-- **Shape.** Follow `apps/storybook/src/Icon.stories.tsx` (CSF3): a default
-  export `{ title: '<Name>' } satisfies Meta`, then one named `StoryObj` export
-  per meaningful variant/state using `render: () => …`, each with a short
-  `/** … */` comment saying what it demonstrates. (These are composition stories,
-  so no `component`/`args` — plain `render` functions.)
+- **Location & naming.** `apps/styleguide/src/<Name>.stories.tsx` (PascalCase,
+  matching the component folder). Storybook picks up `src/**/*.stories.tsx`
+  automatically — no registration step.
+- **Shape.** [CSF 3](https://storybook.js.org/docs/api/csf). Follow
+  `apps/styleguide/src/Icon.stories.tsx`: a `meta` object (`title: '<Name>'`,
+  `component`, shared `args`/`argTypes`) exported as the default via
+  `satisfies Meta<typeof X>`, then one `StoryObj<typeof meta>` export per
+  meaningful variant or state, each with a short `/** … */` comment saying what
+  it demonstrates.
+- **Prefer `args` over `render`.** Passing props as `args` is what generates the
+  controls and the prop table; reach for `render` only when a story shows
+  several instances at once (e.g. a variants showcase).
+- **Mind two Storybook-specific gotchas.** Per-story canvas backgrounds are a
+  **global**, not a parameter (`globals: { backgrounds: { value: 'surface' } }`).
+  And a component whose props are a discriminated union (like `Button`) makes
+  Storybook's arg types collapse to `never` — type the meta against one branch
+  (`Meta<ButtonAsButtonProps>`) and cover the other with a `render` story.
 - **Import from `@repo/ui`**, not a relative path into `packages/ui`, so the
   story exercises the public barrel.
 - **Cover the API, not the Figma matrix.** At minimum a `Default` story, plus
@@ -255,10 +251,7 @@ every brand.
   viewport, not by separate "Mobile"/"Desktop" stories.
 - **Tokens only.** Any wrapper/layout markup in the story uses the same
   design-token utilities as components — no hardcoded hex/px.
-- **Brand via the toolbar.** The preview wraps stories in a `data-brand` from the
-  toolbar "Brand" switcher (`.storybook/preview.tsx`); check brands there, not
-  with per-brand stories.
-- **Dynamic imagery inline.** Pass realistic placeholder values for image/text
+- **Dynamic imagery via args.** Pass realistic placeholder values for image/text
   props; don't add assets to `packages/ui` just for a story.
 
 **When updating a component:** adding, removing, or renaming a prop or variant
@@ -267,20 +260,27 @@ means updating its story in the same change.
 ## 6. Verify before you call it done
 
 1. **Typecheck all three** — the package, the app, and the workbench:
-   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck && pnpm --filter workbench typecheck`.
-2. **Render it in Storybook.** Run `pnpm --filter workbench dev`, open
-   http://localhost:6006/, and confirm every story for the component renders
-   without console errors. Spot-check another brand with the toolbar "Brand"
-   switcher.
-3. **Visually check against the design.** A headless screenshot of a story's
-   isolated preview iframe works without a browser dependency (story id is
-   `<title>--<story-name>` in kebab-case, e.g. `icon--sizes`; add
-   `&globals=brand:amcplus` to theme it):
+   `pnpm --filter @repo/ui typecheck && pnpm --filter web typecheck && pnpm --filter styleguide typecheck`.
+2. **Render it in Storybook.** Run `pnpm --filter styleguide dev`, open
+   http://localhost:61000/, and confirm every story for the component renders
+   without console errors. Spot-check under another brand with the **Brand**
+   toolbar (or by appending `?brand=amcplus`), and check the **Accessibility**
+   panel for new violations.
+3. **Visually check against the design.** A headless screenshot works without a
+   browser dependency. Render the story on its own via `/iframe.html?id=<id>`,
+   where the id is `<title>--<story-name>` in kebab-case (e.g.
+   `icon--sizes`, `button--as-link`); that skips the Storybook chrome. Globals
+   go in one `&globals=` param, semicolon-separated:
    ```
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-     --headless --disable-gpu --hide-scrollbars --window-size=760,2750 \
-     --screenshot=/tmp/sg.png "http://localhost:6006/iframe.html?id=<name>--default&viewMode=story"
+     --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
+     --user-data-dir=/tmp/sg-profile --virtual-time-budget=8000 \
+     --window-size=760,2750 --screenshot=/tmp/sg.png \
+     "http://localhost:61000/iframe.html?id=<name>--default&globals=brand:amcplus"
    ```
+   - `--user-data-dir` is required if Chrome is already running, and
+     `--virtual-time-budget` makes it exit once the story has rendered;
+     without them the command hangs and writes no file.
    Compare every static asset's slot, proportions, and the overall layout to the
    Figma render. Note (don't silently fix) any pre-existing out-of-scope issues.
    - **macOS headless caveat:** Chrome enforces a ~500px minimum window width,

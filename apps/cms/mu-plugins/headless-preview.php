@@ -7,10 +7,17 @@
  *              the draft over the authenticated REST API.
  * Network:     true
  *
- * Pairs with headless-links.php (reuses mosaic_frontend_origin / mosaic_tenant_brand)
- * and the Next route at apps/web/app/api/preview. The shared secret comes from
- * the MOSAIC_PREVIEW_SECRET env var (keep it in sync with WORDPRESS_PREVIEW_SECRET
- * on the Next side); it falls back to a known dev value for local use.
+ * Pairs with headless-permalinks.php (reuses its `mosaic_headless_current_origin()`
+ * tenant→origin resolver) and the Next route at apps/web/app/api/preview. The
+ * shared secret comes from the MOSAIC_PREVIEW_SECRET env var (keep it in sync
+ * with WORDPRESS_PREVIEW_SECRET on the Next side); it falls back to a known dev
+ * value for local use.
+ *
+ * This intentionally overrides headless-permalinks.php's own `preview_post_link`
+ * filter (which keeps Preview on WordPress). `apps/web` now has a draft-preview
+ * route (Draft Mode), so Preview should open there instead. This filter runs at
+ * priority 20 — after that one's priority 10 — so it wins regardless of plugin
+ * load order.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -46,8 +53,13 @@ function mosaic_preview_secret() {
  * @return string
  */
 function mosaic_preview_link( $link, $post ) {
-	if ( ! function_exists( 'mosaic_frontend_origin' ) ) {
-		return $link; // headless-links.php not loaded.
+	if ( ! function_exists( 'mosaic_headless_current_origin' ) ) {
+		return $link; // headless-permalinks.php not loaded.
+	}
+
+	$origin = mosaic_headless_current_origin();
+	if ( null === $origin ) {
+		return $link; // Tenant has no mapped frontend origin.
 	}
 
 	return add_query_arg(
@@ -57,8 +69,10 @@ function mosaic_preview_link( $link, $post ) {
 			'type'   => $post->post_type,
 			'slug'   => $post->post_name,
 		),
-		mosaic_frontend_origin( mosaic_tenant_brand() ) . '/api/preview'
+		$origin . '/api/preview'
 	);
 }
 
-add_filter( 'preview_post_link', 'mosaic_preview_link', 10, 2 );
+// Priority 20 so this runs after headless-permalinks.php's keep-on-WP filter
+// (priority 10) and wins, routing Preview to Next.js Draft Mode.
+add_filter( 'preview_post_link', 'mosaic_preview_link', 20, 2 );

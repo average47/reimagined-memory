@@ -72,32 +72,52 @@ WORDPRESS_BASE_URL=http://localhost
 The web app's data fetcher lives in `apps/web/lib/wordpress.ts`; the `/posts`
 page demonstrates switching between all five tenants.
 
-## Theme
+## "View Page" opens the frontend
 
-All sites run a single minimal **block theme**, Mosaic (`themes/mosaic`,
-bind-mounted so it's version-controlled). The frontend is Next.js, so the
-theme's templates are intentionally bare — it exists mainly to register the
-**Header** and **Footer** menu locations.
+`mu-plugins/headless-permalinks.php` repoints WordPress's view affordances at
+`apps/web`, so editors land on the real site instead of WordPress's theme. It
+filters `get_permalink()`, which covers all of them at once: the **View** row
+action in the posts/pages list, the admin bar's **View Page**, the editor's
+**View Page** link, and the "Page published." notice.
 
-Author header/footer links in `wp-admin` → **Appearance → Menus**: a
-drag-and-drop builder where each item is a label + URL — drag an item to the
-right to nest it as a sub-link. Per-item checkboxes add **Open in new tab**
-(`mu-plugins/menu-new-tab.php`, native target → `MenuItem.target` = `_blank`)
-and **Use icon** (`mu-plugins/menu-use-icon.php` → `MenuItem.useIcon` Boolean).
-Assign a menu to the **Header** or **Footer** location. The menus are exposed
-over WPGraphQL by location, so the Next.js frontend renders them:
+The target is `<frontend origin>/<slug>` — `apps/web` resolves content by slug
+alone (middleware rewrites `/<slug>` to `/sites/<brand>/<slug>`), so the post
+type and page hierarchy don't affect the URL.
 
-```graphql
-{
-  menuItems(where: { location: FOOTER }) {
-    nodes { label url parentId childItems { nodes { label url } } }
-  }
-}
+Each tenant maps to its own brand origin, defaulting to the local dev proxy
+(`apps/proxy`):
+
+| Tenant | "View Page" target |
+| --- | --- |
+| AMC+ (main) | http://amcplus.localhost:3001/&lt;slug&gt; |
+| Shudder | http://shudder.localhost:3001/&lt;slug&gt; |
+| Acorn | http://acorn.localhost:3001/&lt;slug&gt; |
+| Sundance Now | http://sundancenow.localhost:3001/&lt;slug&gt; |
+| We TV | http://wetv.localhost:3001/&lt;slug&gt; |
+
+Point it at deployed frontends with the `MOSAIC_FRONTEND_ORIGINS` env var — a
+comma-separated list of `brand=origin` pairs. Unlisted brands keep their
+default:
+
+```yaml
+# docker-compose.yml, under the `wordpress` service
+environment:
+  MOSAIC_FRONTEND_ORIGINS: amcplus=https://amcplus.com,shudder=https://shudder.com,acorn=https://acorn.tv
 ```
 
-`setup.sh` makes Mosaic the default (`WP_DEFAULT_THEME`), network-enables and
-activates it on every tenant, removes any other theme, and seeds example
-Header/Footer menus on the primary site.
+Three things it deliberately leaves alone:
+
+- **The content API.** The filters only run for admin and REST requests, so
+  WPGraphQL's `uri`/`link` fields — what `apps/web` actually reads — stay as
+  WordPress generates them.
+- **Preview.** The **Preview** button still opens WordPress. `apps/web` resolves
+  pages over the public GraphQL endpoint and has no draft-preview route, so a
+  frontend preview link would render "no content found" for exactly the
+  unpublished posts preview exists to show.
+- **"Visit Site"** and `home_url()`, which is what builds the REST and GraphQL
+  endpoint URLs — rewriting those would break the content API.
+
+Media keeps WordPress URLs too, since the frontend has no attachment route.
 
 ## Content types
 
@@ -268,56 +288,6 @@ inserter.
 | Block | Component | Attributes |
 | --- | --- | --- |
 | `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
-| `mosaic/hero` | `Hero` | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings) |
-
-## Frontend links & preview
-
-This is a headless install — content is authored here but rendered by `apps/web`
-(Next.js). Two mu-plugins route WordPress's own links to that frontend:
-
-- **`mu-plugins/headless-links.php`** — permalinks point at the Next.js frontend,
-  so **"View Page/Post"** (and the Gutenberg view link, admin bar, and row
-  "View" actions) open the published page in Next.js, not the raw WordPress
-  render. Each tenant maps to its brand frontend (primary site → `amcplus`;
-  sub-sites use their path segment), i.e. `http://<brand>.localhost:3001/<slug>`
-  in dev.
-- **`mu-plugins/headless-preview.php`** — the **"Preview"** button opens the
-  unpublished draft in Next.js [Draft Mode](https://nextjs.org/docs/app/building-your-application/configuring/draft-mode).
-  It links to `…/api/preview` with a shared secret and the node's id/type; Next
-  validates the secret, enables Draft Mode, and fetches the draft over the
-  authenticated REST API.
-
-Override the frontend origin for non-dev environments with the
-`MOSAIC_FRONTEND_URL` env var (use `{brand}` as the placeholder, e.g.
-`https://{brand}.example.com`).
-
-### Enabling preview
-
-Preview needs an authenticated REST call, so set these on the **Next side**
-(`apps/web/.env.local`):
-
-```
-WORDPRESS_PREVIEW_SECRET=<shared secret>        # match MOSAIC_PREVIEW_SECRET here
-WORDPRESS_PREVIEW_USER=admin
-WORDPRESS_PREVIEW_APP_PASSWORD=<application password>
-```
-
-Create the Application Password once:
-
-```bash
-docker compose run --rm --entrypoint wp wp-cli \
-  user application-password create admin "mosaic-preview" --porcelain --url=http://localhost/
-```
-
-The secret defaults to a dev value on both sides, so it works locally without
-config; set `MOSAIC_PREVIEW_SECRET` (here) and `WORDPRESS_PREVIEW_SECRET` (Next)
-to a real secret for any shared/public deployment. `headless-preview.php` also
-re-enables Application Passwords, which WordPress otherwise hides on this
-non-SSL install (a no-op over HTTPS).
-
-> Preview fetches the **saved** draft by ID. Gutenberg autosaves before opening
-> Preview, so draft edits show; unsaved autosave changes to an already-published
-> post are not reflected.
 
 ## Notes
 

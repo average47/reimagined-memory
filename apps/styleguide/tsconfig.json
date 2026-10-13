@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    // This app is never published, so it emits no declarations. Turning them
+    // off avoids TS2742 on the story `meta` objects, whose inferred types
+    // reference Storybook internals through pnpm's nested node_modules.
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src", ".storybook", "vite.config.ts"],
+  "exclude": ["node_modules", "storybook-static"]
+}

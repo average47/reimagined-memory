@@ -2,7 +2,7 @@
  * Reuse the web app's Tailwind entrypoint as the single source of truth: it
  * imports Tailwind, the brand primitives (colors.css) and the @theme token
  * mappings, and scans packages/ui for class usage. We only add this app's own
- * story files as an extra content source so their utility classes are emitted.
+ * files as extra content sources so their utility classes are emitted too.
  */
 @import '../../web/app/globals.css';
 

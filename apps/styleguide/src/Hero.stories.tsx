@@ -6,13 +6,14 @@ import { Hero } from '@repo/ui';
 const bg =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="9"><rect width="16" height="9" fill="#141414"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="9"><rect width="16" height="9" fill="#141414"/></svg>'
   );
 const logo =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="307" height="54"><text x="0" y="40" font-family="sans-serif" font-size="34" letter-spacing="8" fill="#ffffff">MOSAIC</text></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="307" height="54"><text x="0" y="40" font-family="sans-serif" font-size="34" letter-spacing="8" fill="#ffffff">MOSAIC</text></svg>'
   );
+
 const legal =
   'Discount is for one year only on new/upgraded Annual Premium subscriptions. ' +
   'Standard price automatically applies on the second billing cycle. Plan ' +
@@ -22,39 +23,40 @@ const legal =
 const meta = {
   title: 'Hero',
   component: Hero,
-  parameters: { layout: 'fullscreen' },
+  // The hero is full-bleed, so give it the whole canvas.
+  parameters: {
+    layout: 'fullscreen',
+  },
   args: {
     backgroundSrc: bg,
     logoSrc: logo,
     logoAlt: 'Mosaic',
     title: 'Exceptional Stories. Unforgettable Drama.',
-    description:
-      'Award-winning originals, hit TV series, classic films and iconic franchises, all on AMC+.',
-    priceText: 'Plans start at $6.99/month',
-    legal,
     ctaLabel: 'Start Free Trial',
     ctaHref: '#start',
   },
   argTypes: {
-    title: { control: 'text' },
     description: { control: 'text' },
     priceText: { control: 'text' },
     legal: { control: 'text' },
+    title: { control: 'text' },
     ctaLabel: { control: 'text' },
-    ctaHref: { control: 'text' },
-    backgroundSrc: { control: 'text' },
-    logoSrc: { control: 'text' },
-    logoAlt: { control: 'text' },
   },
 } satisfies Meta<typeof Hero>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
-/** Full hero. Edit any field in Controls; resize past `lg` for desktop. */
-export const Default: Story = {};
-
-/** Headline + CTA only — the optional text fields cleared. */
-export const Minimal: Story = {
-  args: { description: '', priceText: '', legal: '' },
+/** Full hero. Resize past `lg` (1024px) to see the desktop layout. */
+export const Default: Story = {
+  args: {
+    description:
+      'Award-winning originals, hit TV series, classic films and iconic franchises, all on AMC+.',
+    priceText: 'Plans start at $6.99/month',
+    legal,
+  },
 };
+
+/** Headline + CTA only (the Figma show* toggles map to omitted props). */
+export const Minimal: Story = {};
