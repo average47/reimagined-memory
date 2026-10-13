@@ -33,6 +33,35 @@ export interface PageContentNode {
   [key: string]: unknown;
 }
 
+/**
+ * A draft/preview node fetched over the authenticated REST API (`context=edit`),
+ * used by Next.js Draft Mode to render unpublished content.
+ */
+export interface PreviewContent {
+  databaseId: number;
+  type: string;
+  status: string;
+  title: string;
+  /** Rendered content HTML (includes Mosaic block placeholders). */
+  content: string;
+}
+
+/** A nav-menu item (header/footer) fetched by location over WPGraphQL. */
+export interface MenuItemNode {
+  id: string;
+  label: string | null;
+  url: string | null;
+  /** Parent item id, or null for a top-level item. */
+  parentId: string | null;
+  /** `_blank` when "Open in new tab" is ticked. */
+  target: string | null;
+  /** Mirrors the "Use icon" menu-item checkbox. */
+  useIcon: boolean | null;
+}
+
+/** Registered nav-menu locations exposed by the Mosaic theme. */
+export type MenuLocation = 'HEADER' | 'FOOTER';
+
 /** Shape of a WPGraphQL response envelope. */
 export interface GraphQLResponse<T> {
   data?: T;

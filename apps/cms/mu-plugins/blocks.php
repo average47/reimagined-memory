@@ -161,7 +161,7 @@ add_action(
 			wp_enqueue_script(
 				"mosaic-{$slug}-editor",
 				plugins_url( "blocks/{$slug}-editor.js", __FILE__ ),
-				array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n' ),
+				array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-media-utils' ),
 				filemtime( __DIR__ . "/blocks/{$slug}-editor.js" ),
 				true
 			);

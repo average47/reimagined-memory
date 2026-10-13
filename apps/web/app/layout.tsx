@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
+import { Footer } from "@/components/Footer";
+import { getMenu, tenantForNetworkPath } from "@/lib/wordpress";
+import type { MenuItemNode } from "@/lib/wordpress.types";
+import { siteConfigNetworkMap } from "@/lib/siteConfigDomainMap";
 import "./globals.css";
 
 const inter = Inter({
@@ -56,18 +61,53 @@ const endurancePro = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Reimagined Memory",
-  description: "A Turborepo monorepo with Next.js, a UI library, and utils.",
-};
+// Endurance Pro's Black cut as its own family (normal weight), so "bold" text
+// can swap to this family instead of relying on weight-matching 700 → 900.
+const enduranceBlack = localFont({
+  src: [
+    {
+      path: "./sites/amcplus/EndurancePro/EndurancePro-Black.woff2",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-endurance-black",
+  display: "swap",
+});
 
-export default function RootLayout({
+// Title comes from the per-brand site config (siteConfigDomainMap), resolved
+// from the brand the middleware set on `x-network-path`.
+export async function generateMetadata(): Promise<Metadata> {
+  const networkPath = (await headers()).get("x-network-path") ?? "";
+  const config = siteConfigNetworkMap[networkPath];
+  return {
+    title: config?.title ?? "Reimagined Memory",
+    description: "A Turborepo monorepo with Next.js, a UI library, and utils.",
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Resolve the tenant from middleware's header, then fetch its footer menu.
+  const networkPath = (await headers()).get("x-network-path");
+  const tenant = tenantForNetworkPath(networkPath);
+
+  let footerMenu: MenuItemNode[] = [];
+  try {
+    footerMenu = await getMenu(tenant, "FOOTER");
+  } catch {
+    // CMS unavailable — leave the menu empty.
+  }
+
   return (
-    <html lang="en" className={`${inter.variable} ${endurancePro.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${endurancePro.variable} ${enduranceBlack.variable}`}
+    >
       <body className="min-h-screen bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-50">
         {children}
+        <Footer items={footerMenu} />
       </body>
     </html>
   );

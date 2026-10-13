@@ -21,6 +21,15 @@
     var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
     sans-serif;
 
+  /*
+   * Bold as a family swap, not a weight: `font-bold` applies --brand-font-bold
+   * at --brand-font-weight-bold (see globals.css). Default brands reuse the
+   * brand font at 700; a brand with a dedicated bold cut (AMC+) overrides to
+   * that family at its natural weight.
+   */
+  --brand-font-bold: var(--brand-font);
+  --brand-font-weight-bold: 700;
+
   /* Brand colors */
   [data-brand='acorn'] {
     --brand-primary: #fdb517;
@@ -37,6 +46,11 @@
     --brand-font:
       var(--font-endurance), var(--font-inter), 'Inter', ui-sans-serif,
       system-ui, -apple-system, sans-serif;
+    /* Bold text uses the Black cut as a family at its natural (normal) weight. */
+    --brand-font-bold:
+      var(--font-endurance-black), var(--font-inter), 'Inter', ui-sans-serif,
+      system-ui, -apple-system, sans-serif;
+    --brand-font-weight-bold: 400;
   }
   [data-brand='shudder'] {
     --brand-primary: #fdb517;

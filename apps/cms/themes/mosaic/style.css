@@ -1,0 +1,12 @@
+/*
+Theme Name: Mosaic
+Theme URI: https://github.com/reimagined-memory
+Author: Mosaic
+Description: Minimal headless block theme for the Mosaic Multisite network. Ships an editable Header and Footer (Site Editor template parts) and nothing else; page content is rendered by the decoupled Next.js frontend.
+Version: 1.0.0
+Requires at least: 6.5
+Requires PHP: 8.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: mosaic
+*/

@@ -9,8 +9,9 @@
 (function (wp) {
   const el = wp.element.createElement;
   const { __ } = wp.i18n;
-  const { InspectorControls, useBlockProps } = wp.blockEditor;
-  const { PanelBody, TextControl, TextareaControl } = wp.components;
+  const { InspectorControls, useBlockProps, MediaUpload, MediaUploadCheck } =
+    wp.blockEditor;
+  const { PanelBody, TextControl, TextareaControl, Button } = wp.components;
 
   wp.blocks.registerBlockType('mosaic/hero', {
     apiVersion: 3,
@@ -42,6 +43,38 @@
           onChange: (value) => setAttributes({ [key]: value }),
         });
 
+      // Media field: pick from the WordPress Media Library (writes the chosen
+      // attachment's URL to the attribute) OR paste a URL into the text input.
+      const mediaField = (key, label) =>
+        el(
+          'div',
+          { style: { marginBottom: '16px' } },
+          el(
+            MediaUploadCheck,
+            null,
+            el(MediaUpload, {
+              allowedTypes: ['image'],
+              onSelect: (media) => setAttributes({ [key]: media.url }),
+              render: ({ open }) =>
+                el(
+                  Button,
+                  {
+                    variant: 'secondary',
+                    onClick: open,
+                    style: { marginBottom: '8px' },
+                  },
+                  attributes[key] ? __('Replace image') : __('Select image')
+                ),
+            })
+          ),
+          el(TextControl, {
+            label: __(label),
+            help: __('Choose from the Media Library above, or paste a URL.'),
+            value: attributes[key],
+            onChange: (value) => setAttributes({ [key]: value }),
+          })
+        );
+
       return el(
         'div',
         blockProps,
@@ -61,8 +94,8 @@
           el(
             PanelBody,
             { title: __('Media'), initialOpen: false },
-            field(TextControl, 'backgroundSrc', 'Background image URL'),
-            field(TextControl, 'logoSrc', 'Logo image URL'),
+            mediaField('backgroundSrc', 'Background image URL'),
+            mediaField('logoSrc', 'Logo image URL'),
             field(TextControl, 'logoAlt', 'Logo alt text')
           )
         ),
@@ -77,7 +110,29 @@
             },
           },
           el('div', { style: { fontSize: '11px', letterSpacing: '1px', opacity: 0.6, textTransform: 'uppercase' } }, __('Mosaic Hero')),
-          el('div', { style: { fontSize: '20px', fontWeight: 700, marginTop: '6px' } }, attributes.title || __('(headline)')),
+          // Headline is required — show a muted placeholder only while empty.
+          el(
+            'div',
+            {
+              style: {
+                fontSize: '20px',
+                fontWeight: 700,
+                marginTop: '6px',
+                opacity: attributes.title ? 1 : 0.5,
+              },
+            },
+            attributes.title || __('(headline)')
+          ),
+          // Optional text fields render once filled in.
+          attributes.description
+            ? el('div', { style: { marginTop: '8px' } }, attributes.description)
+            : null,
+          attributes.priceText
+            ? el('div', { style: { marginTop: '8px', fontWeight: 600 } }, attributes.priceText)
+            : null,
+          attributes.legal
+            ? el('div', { style: { marginTop: '8px', fontSize: '11px', opacity: 0.6 } }, attributes.legal)
+            : null,
           attributes.ctaLabel
             ? el('div', { style: { marginTop: '12px', opacity: 0.8 } }, '[ ' + attributes.ctaLabel + ' ]')
             : null

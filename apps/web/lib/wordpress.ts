@@ -1,6 +1,9 @@
 import type {
   GraphQLResponse,
+  MenuItemNode,
+  MenuLocation,
   PageContentNode,
+  PreviewContent,
   Tenant,
   TenantKey,
   WordPressPost,
@@ -59,6 +62,76 @@ export function tenantForNetworkPath(
 export function graphqlEndpoint(key: TenantKey): string {
   const { path } = getTenant(key);
   return path ? `${BASE_URL}/${path}/graphql` : `${BASE_URL}/graphql`;
+}
+
+/** REST API base (wp/v2) for a given tenant. */
+export function restEndpoint(key: TenantKey): string {
+  const { path } = getTenant(key);
+  const prefix = path ? `${BASE_URL}/${path}` : BASE_URL;
+  return `${prefix}/wp-json/wp/v2`;
+}
+
+/** Map a WordPress post type to its REST base (rest_base). */
+const POST_TYPE_REST: Record<string, string> = {
+  page: 'pages',
+  post: 'posts',
+  movie: 'movies',
+  tv_series: 'tv-series',
+  tv_season: 'tv-seasons',
+};
+
+/**
+ * Fetch a single draft/published node by database ID over the authenticated
+ * REST API (`context=edit`), for Next.js Draft Mode previews. Requires
+ * `WORDPRESS_PREVIEW_USER` + `WORDPRESS_PREVIEW_APP_PASSWORD` (a WordPress
+ * Application Password). Returns null when the node can't be found.
+ *
+ * @throws if preview auth is unconfigured or the request fails.
+ */
+export async function getPreviewById(
+  tenant: TenantKey,
+  type: string,
+  id: number,
+): Promise<PreviewContent | null> {
+  const user = process.env.WORDPRESS_PREVIEW_USER;
+  const pass = process.env.WORDPRESS_PREVIEW_APP_PASSWORD;
+  if (!user || !pass) {
+    throw new Error(
+      'Preview auth not configured: set WORDPRESS_PREVIEW_USER and WORDPRESS_PREVIEW_APP_PASSWORD.',
+    );
+  }
+
+  const restBase = POST_TYPE_REST[type] ?? `${type}s`;
+  const url = `${restEndpoint(tenant)}/${restBase}/${id}?context=edit`;
+  const auth = Buffer.from(`${user}:${pass}`).toString('base64');
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${auth}` },
+    cache: 'no-store',
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(
+      `WordPress preview request to ${url} failed: ${res.status} ${res.statusText}`,
+    );
+  }
+
+  const json = (await res.json()) as {
+    id: number;
+    type: string;
+    status: string;
+    title?: { rendered?: string };
+    content?: { rendered?: string };
+  };
+
+  return {
+    databaseId: json.id,
+    type: json.type,
+    status: json.status,
+    title: json.title?.rendered ?? '',
+    content: json.content?.rendered ?? '',
+  };
 }
 
 /**
@@ -274,4 +347,41 @@ export async function getPageBySlug(
     init
   );
   return data.contentNodes.nodes[0] ?? null;
+}
+
+const MENU_QUERY = /* GraphQL */ `
+  query Menu($location: MenuLocationEnum!) {
+    menuItems(where: { location: $location }, first: 100) {
+      nodes {
+        id
+        label
+        url
+        parentId
+        target
+        useIcon
+      }
+    }
+  }
+`;
+
+interface MenuQueryResult {
+  menuItems: { nodes: MenuItemNode[] };
+}
+
+/**
+ * Fetch the items of the menu assigned to a location (HEADER / FOOTER) for a
+ * tenant. Items are returned flat; `parentId` describes the nesting.
+ */
+export async function getMenu(
+  tenant: TenantKey,
+  location: MenuLocation,
+  init?: WpFetchInit
+): Promise<MenuItemNode[]> {
+  const data = await wpFetch<MenuQueryResult>(
+    tenant,
+    MENU_QUERY,
+    { location },
+    init
+  );
+  return data.menuItems.nodes;
 }

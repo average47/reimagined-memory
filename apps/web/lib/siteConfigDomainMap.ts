@@ -11,7 +11,7 @@ const acornConfig: ISiteConfig = {
 };
 
 const amcplusConfig: ISiteConfig = {
-  title: 'AMC+',
+  title: 'AMC+ | Premium Streaming Service | Watch TV Shows & Movies',
   logoRatio: '67/34',
   logoMaxWidth: 223,
   logoSrc: '/logos/amcplus.png',
@@ -22,7 +22,7 @@ const amcplusConfig: ISiteConfig = {
 };
 
 const shudderConfig: ISiteConfig = {
-  title: 'Shudder',
+  title: 'SHUDDER | Stream Horror, Thrillers, and Suspense Ad-Free and Uncut',
   logoRatio: '913/161',
   logoMaxWidth: 510,
   logoSrc: '/logos/shudder.png',

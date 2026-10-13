@@ -72,6 +72,33 @@ WORDPRESS_BASE_URL=http://localhost
 The web app's data fetcher lives in `apps/web/lib/wordpress.ts`; the `/posts`
 page demonstrates switching between all five tenants.
 
+## Theme
+
+All sites run a single minimal **block theme**, Mosaic (`themes/mosaic`,
+bind-mounted so it's version-controlled). The frontend is Next.js, so the
+theme's templates are intentionally bare — it exists mainly to register the
+**Header** and **Footer** menu locations.
+
+Author header/footer links in `wp-admin` → **Appearance → Menus**: a
+drag-and-drop builder where each item is a label + URL — drag an item to the
+right to nest it as a sub-link. Per-item checkboxes add **Open in new tab**
+(`mu-plugins/menu-new-tab.php`, native target → `MenuItem.target` = `_blank`)
+and **Use icon** (`mu-plugins/menu-use-icon.php` → `MenuItem.useIcon` Boolean).
+Assign a menu to the **Header** or **Footer** location. The menus are exposed
+over WPGraphQL by location, so the Next.js frontend renders them:
+
+```graphql
+{
+  menuItems(where: { location: FOOTER }) {
+    nodes { label url parentId childItems { nodes { label url } } }
+  }
+}
+```
+
+`setup.sh` makes Mosaic the default (`WP_DEFAULT_THEME`), network-enables and
+activates it on every tenant, removes any other theme, and seeds example
+Header/Footer menus on the primary site.
+
 ## Content types
 
 ### Movie (`movie`)
@@ -241,6 +268,56 @@ inserter.
 | Block | Component | Attributes |
 | --- | --- | --- |
 | `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
+| `mosaic/hero` | `Hero` | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings) |
+
+## Frontend links & preview
+
+This is a headless install — content is authored here but rendered by `apps/web`
+(Next.js). Two mu-plugins route WordPress's own links to that frontend:
+
+- **`mu-plugins/headless-links.php`** — permalinks point at the Next.js frontend,
+  so **"View Page/Post"** (and the Gutenberg view link, admin bar, and row
+  "View" actions) open the published page in Next.js, not the raw WordPress
+  render. Each tenant maps to its brand frontend (primary site → `amcplus`;
+  sub-sites use their path segment), i.e. `http://<brand>.localhost:3001/<slug>`
+  in dev.
+- **`mu-plugins/headless-preview.php`** — the **"Preview"** button opens the
+  unpublished draft in Next.js [Draft Mode](https://nextjs.org/docs/app/building-your-application/configuring/draft-mode).
+  It links to `…/api/preview` with a shared secret and the node's id/type; Next
+  validates the secret, enables Draft Mode, and fetches the draft over the
+  authenticated REST API.
+
+Override the frontend origin for non-dev environments with the
+`MOSAIC_FRONTEND_URL` env var (use `{brand}` as the placeholder, e.g.
+`https://{brand}.example.com`).
+
+### Enabling preview
+
+Preview needs an authenticated REST call, so set these on the **Next side**
+(`apps/web/.env.local`):
+
+```
+WORDPRESS_PREVIEW_SECRET=<shared secret>        # match MOSAIC_PREVIEW_SECRET here
+WORDPRESS_PREVIEW_USER=admin
+WORDPRESS_PREVIEW_APP_PASSWORD=<application password>
+```
+
+Create the Application Password once:
+
+```bash
+docker compose run --rm --entrypoint wp wp-cli \
+  user application-password create admin "mosaic-preview" --porcelain --url=http://localhost/
+```
+
+The secret defaults to a dev value on both sides, so it works locally without
+config; set `MOSAIC_PREVIEW_SECRET` (here) and `WORDPRESS_PREVIEW_SECRET` (Next)
+to a real secret for any shared/public deployment. `headless-preview.php` also
+re-enables Application Passwords, which WordPress otherwise hides on this
+non-SSL install (a no-op over HTTPS).
+
+> Preview fetches the **saved** draft by ID. Gutenberg autosaves before opening
+> Preview, so draft edits show; unsaved autosave changes to an already-published
+> post are not reflected.
 
 ## Notes
 

@@ -46,9 +46,11 @@
   --font-cta: var(--brand-font);
   --font-badge: var(--brand-font);
 
-  /* Font weights */
+  /* Font weights. Bold resolves to the brand's bold weight (400 when the brand
+     has a dedicated bold font family, 700 otherwise) — see colors.css. The
+     `font-bold` override below adds the matching bold family. */
   --font-weight-regular: 400;
-  --font-weight-bold: 700;
+  --font-weight-bold: var(--brand-font-weight-bold);
 
   /* Font sizes (font/size/*) */
   --text-1: 0.625rem;
@@ -90,4 +92,14 @@
   --spacing-12: 96px;
   --spacing-13: 128px;
   --spacing-14: 160px;
+}
+
+/*
+ * Bold is a font-family swap, not weight 700: `font-bold` applies the brand's
+ * bold family at its natural weight. Most brands reuse the brand font at 700
+ * (so Inter still bolds normally); AMC+ swaps to the Endurance Pro Black cut at
+ * normal weight. Both resolve through the [data-brand] tokens in colors.css.
+ */
+@utility font-bold {
+  font-family: var(--brand-font-bold);
 }

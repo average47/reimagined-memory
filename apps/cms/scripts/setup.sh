@@ -111,7 +111,44 @@ wp site list --field=url | while read -r site_url; do
   wp rewrite flush --url="${site_url}" >/dev/null 2>&1 || true
 done
 
-# 8. Optionally import a schema.org feed into the movie/tv_series/tv_season
+# 8. Theme: the `mosaic` block theme (editable header/footer) is the only theme.
+# Make it the default constant, network-enable + activate it on every tenant,
+# then remove any other theme. Idempotent.
+echo "Configuring the Mosaic theme..."
+wp config set WP_DEFAULT_THEME mosaic --type=constant --quiet 2>/dev/null || true
+wp theme enable mosaic --network --activate >/dev/null 2>&1 || true
+wp site list --field=url | while read -r site_url; do
+  wp theme activate mosaic --url="${site_url}" >/dev/null 2>&1 || true
+done
+for theme in $(wp theme list --field=name 2>/dev/null); do
+  if [ "${theme}" != "mosaic" ]; then
+    echo "Removing theme '${theme}'..."
+    wp theme delete "${theme}" >/dev/null 2>&1 || true
+  fi
+done
+
+# 8b. Seed example Header/Footer menus on the primary site (idempotent — only
+# when the footer location is unassigned). Authored thereafter via Appearance →
+# Menus and consumed by Next.js over WPGraphQL (by location).
+if ! wp menu list --fields=locations --format=csv --url="${BASE_URL}" 2>/dev/null | grep -q footer; then
+  echo "Seeding example Header/Footer menus..."
+  hm=$(wp menu create "Header" --porcelain --url="${BASE_URL}")
+  wp menu item add-custom "${hm}" "Home" "/" --url="${BASE_URL}" >/dev/null
+  wp menu item add-custom "${hm}" "Movies" "/movies" --url="${BASE_URL}" >/dev/null
+  wp menu item add-custom "${hm}" "Series" "/series" --url="${BASE_URL}" >/dev/null
+  wp menu location assign "${hm}" header --url="${BASE_URL}" >/dev/null
+
+  fm=$(wp menu create "Footer" --porcelain --url="${BASE_URL}")
+  ex=$(wp menu item add-custom "${fm}" "Explore" "#" --porcelain --url="${BASE_URL}")
+  wp menu item add-custom "${fm}" "Movies" "/movies" --parent-id="${ex}" --url="${BASE_URL}" >/dev/null
+  wp menu item add-custom "${fm}" "TV Series" "/series" --parent-id="${ex}" --url="${BASE_URL}" >/dev/null
+  co=$(wp menu item add-custom "${fm}" "Company" "#" --porcelain --url="${BASE_URL}")
+  wp menu item add-custom "${fm}" "About" "/about" --parent-id="${co}" --url="${BASE_URL}" >/dev/null
+  wp menu item add-custom "${fm}" "Careers" "/careers" --parent-id="${co}" --url="${BASE_URL}" >/dev/null
+  wp menu location assign "${fm}" footer --url="${BASE_URL}" >/dev/null
+fi
+
+# 9. Optionally import a schema.org feed into the movie/tv_series/tv_season
 # types. Skipped when WORDPRESS_IMPORT_FEED_URL is unset; non-fatal on failure.
 if [ -n "${WORDPRESS_IMPORT_FEED_URL:-}" ]; then
   echo "Importing schema.org feed into the primary site..."
