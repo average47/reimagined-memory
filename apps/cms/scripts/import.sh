@@ -4,10 +4,10 @@
 # ⚠️ Destructive: overwrites the current database. The stack must be running.
 #
 # Usage:
-#   pnpm --filter cms import                 # newest exports/wordpress-*.sql.gz
-#   pnpm --filter cms import 20261014        # a specific date stamp
-#   pnpm --filter cms import path/to/dump.sql.gz
-#   FORCE=1 pnpm --filter cms import         # skip the confirmation prompt
+#   pnpm --filter cms run import             # newest exports/wordpress-*.sql.gz
+#   pnpm --filter cms run import 20261014    # a specific date stamp
+#   pnpm --filter cms run import path/to/dump.sql.gz
+#   FORCE=1 pnpm --filter cms run import     # skip the confirmation prompt
 set -euo pipefail
 
 cd "$(dirname "$0")/.." # apps/cms

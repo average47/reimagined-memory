@@ -216,9 +216,9 @@ bind-mounted (edits are live on the next request), and needs **no JS/build step*
 
 ### Card components: attach a movie or TV series (editor search field)
 
-A **card** component (anything that surfaces a title — e.g. `StandardCard`,
-`BrandCards`) must let the editor **attach a movie or TV series** rather than
-retype its title/artwork by hand. The block editor therefore needs a **content
+A **card** component (anything that surfaces a title — e.g. `StandardCard`)
+must let the editor **attach a movie or TV series** rather than retype its
+title/artwork by hand. The block editor therefore needs a **content
 search field**: the editor searches the catalog, picks a result, and the block
 stores a reference to that entry.
 
