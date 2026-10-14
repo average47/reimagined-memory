@@ -6,17 +6,17 @@ import type { ButtonProps, ButtonVariant } from './Button.types';
 // Strokes are `inset-ring`s, not borders: Figma draws them inside the box, so
 // they must not add to the padded height (e.g. secondary is 16 + 22 + 16 = 54).
 const variantClasses: Record<ButtonVariant, string> = {
-  // 36px (mobile x-padding) and 54px (desktop height) have no spacing token.
+  // 36px (mobile x-padding) has no spacing token. Desktop height is the
+  // natural 16 + 25 + 16 = 57.
   primary: cn(
     'bg-action-primary text-text-primary hover:bg-hover-primary',
     'px-[36px] py-3 text-4 leading-(--text-5--line-height)',
-    'lg:h-[54px] lg:px-10 lg:py-4 lg:text-5 lg:leading-(--text-7--line-height)',
+    'lg:px-10 lg:py-4 lg:text-5 lg:leading-(--text-7--line-height)',
   ),
-  // 28px x-padding has no spacing token.
   secondary: cn(
     'bg-action-secondary text-text-secondary inset-ring inset-ring-border-default',
     'hover:bg-hover-secondary hover:inset-ring-hover-secondary',
-    'gap-3 px-[28px] py-4 text-4 leading-(--text-5--line-height)',
+    'gap-3 px-7 py-4 text-4 leading-(--text-5--line-height)',
   ),
   tertiary: cn(
     'bg-action-tertiary text-text-tertiary inset-ring inset-ring-border-default',
