@@ -298,9 +298,11 @@ inserter.
 | `mosaic/hero` | `Hero` | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs) |
 | `mosaic/header` | `Header` | `siteName` (string), `logoSrc` (URL), `href` (link target) |
 | `mosaic/brand-cards` | `BrandCards` | `headline` (string), `cards` (array; each card attaches a `movie`/`tv_series` — `contentType`, `contentId` — plus seeded `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel`, `ctaHref` |
+| `mosaic/card` | `Card` | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
 
 **Attaching a title to a card.** The `mosaic/brand-cards` editor has a per-card
-search field (`blocks/brand-cards-editor.js`) that queries the REST search
+search field (`blocks/brand-cards-editor.js`), and the standalone `mosaic/card`
+block has the same field (`blocks/card-editor.js`); both query the REST search
 endpoint scoped to the `movie` and `tv_series` subtypes
 (`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
 reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from

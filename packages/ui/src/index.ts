@@ -3,3 +3,4 @@ export * from './Button';
 export * from './Hero';
 export * from './Header';
 export * from './BrandCards';
+export * from './Card';
