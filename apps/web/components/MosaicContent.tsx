@@ -2,6 +2,7 @@ import { Fragment, type ReactElement } from 'react';
 import {
   BrandCards,
   Button,
+  Card,
   Hero,
   type BrandCardItem,
   type ButtonVariant,
@@ -83,6 +84,18 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
         />
       );
     }
+    case 'mosaic/card':
+      // Like brand-cards: the attached movie/tv_series seeds these display
+      // fields in the editor; render from them.
+      return (
+        <Card
+          label={String(props.label ?? '')}
+          imageSrc={optionalString(props.imageSrc)}
+          imageAlt={optionalString(props.imageAlt)}
+          backgroundSrc={optionalString(props.backgroundSrc)}
+          href={optionalString(props.href)}
+        />
+      );
     default:
       // Unknown block (e.g. a component without a frontend mapping yet).
       return null;

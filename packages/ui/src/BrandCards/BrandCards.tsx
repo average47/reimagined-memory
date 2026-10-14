@@ -1,7 +1,8 @@
 import type { JSX } from 'react';
 import { cn } from '@repo/utils';
 import { Button } from '../Button';
-import type { BrandCardItem, BrandCardsProps } from './BrandCards.types';
+import { Card } from '../Card';
+import type { BrandCardsProps } from './BrandCards.types';
 
 /*
  * BrandCards — from the Figma "Brand Cards" component (Marketing Platform,
@@ -12,80 +13,16 @@ import type { BrandCardItem, BrandCardsProps } from './BrandCards.types';
  *
  * Colours, type and spacing resolve through the semantic tokens
  * (background/action/text, the type ramp, the 0–14 spacing scale) so each brand
- * restyles via [data-brand]. The CTA reuses the shared Button. Card imagery and
- * copy are prop-supplied (from an attached movie/tv_series in the CMS), so they
- * stay dynamic.
+ * restyles via [data-brand]. The CTA reuses the shared Button and each card is
+ * the shared Card (Figma node 4017:145). Card imagery and copy are
+ * prop-supplied (from an attached movie/tv_series in the CMS), so they stay
+ * dynamic.
  *
- * Note: the design uses a 36px step for a few paddings/gaps (desktop card
- * x-padding, the mobile section gap, the desktop headline↔cards gap). The app
- * spacing scale jumps 32→40 with no 36 token, so those use an arbitrary
- * `[36px]` — same as the shared Button already does for its x-padding.
+ * Note: the design uses a 36px step for a couple of gaps (the mobile section
+ * gap, the desktop headline↔cards gap). The app spacing scale jumps 32→40 with
+ * no 36 token, so those use an arbitrary `[36px]` — same as the shared Button
+ * already does for its x-padding.
  */
-function Card({
-  label,
-  imageSrc,
-  imageAlt = '',
-  backgroundSrc,
-  href,
-}: BrandCardItem): JSX.Element {
-  const inner = (
-    <>
-      {/* Full-bleed background art + top/bottom darkening so the logo and
-          caption stay legible, mirroring the design's double gradient. */}
-      {backgroundSrc ? (
-        <img
-          src={backgroundSrc}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 size-full object-cover"
-        />
-      ) : null}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-background-default/90 to-transparent"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background-default/90 to-transparent"
-      />
-
-      {imageSrc ? (
-        <img
-          src={imageSrc}
-          alt={imageAlt}
-          className="relative h-[36px] w-[80px] object-contain lg:h-9 lg:w-[100px]"
-        />
-      ) : (
-        <span aria-hidden="true" className="relative" />
-      )}
-
-      <p className="relative text-center font-body text-3 text-text-secondary lg:text-4">
-        {label}
-      </p>
-    </>
-  );
-
-  const cardClasses = cn(
-    'relative flex aspect-[173/236] w-[calc(50%-6px)] flex-col items-center justify-between',
-    'overflow-hidden rounded-xl border border-border-default pt-3 pb-5 px-6',
-    'lg:w-[232px] lg:pb-6 lg:px-[36px]',
-  );
-
-  return href ? (
-    <a
-      href={href}
-      className={cn(
-        cardClasses,
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-hover',
-      )}
-    >
-      {inner}
-    </a>
-  ) : (
-    <div className={cardClasses}>{inner}</div>
-  );
-}
-
 export default function BrandCards({
   headline,
   cards,
@@ -111,7 +48,8 @@ export default function BrandCards({
 
         <div className="flex max-w-[358px] flex-wrap justify-center gap-3 lg:max-w-none lg:flex-nowrap lg:gap-4">
           {cards.map((card, index) => (
-            <Card key={index} {...card} />
+            // Two per row on mobile; the Card's own desktop width applies at `lg`.
+            <Card key={index} {...card} className="w-[calc(50%-6px)]" />
           ))}
         </div>
       </div>

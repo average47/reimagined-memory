@@ -121,6 +121,42 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/Card — a single card that attaches a `movie`/`tv_series`
+		// (contentType + contentId) and carries display fields seeded from it.
+		'mosaic/card' => array(
+			'script'     => 'card',
+			'attributes' => array(
+				'contentType'   => array(
+					'type'    => 'string',
+					'enum'    => array( '', 'movie', 'tv_series' ),
+					'default' => '',
+				),
+				'contentId'     => array(
+					'type'    => 'integer',
+					'default' => 0,
+				),
+				'label'         => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'imageSrc'      => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'imageAlt'      => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'backgroundSrc' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'href'          => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
 		// packages/ui/src/Header — `siteName` is the brand name (string);
 		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
 		'mosaic/header' => array(
@@ -181,6 +217,10 @@ function mosaic_render_brand_cards( $attributes ) {
 	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
 }
 
+function mosaic_render_card( $attributes ) {
+	return mosaic_render_block( 'mosaic/card', $attributes );
+}
+
 add_action(
 	'init',
 	function () {
@@ -189,6 +229,7 @@ add_action(
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
+			'mosaic/card'        => 'mosaic_render_card',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {
