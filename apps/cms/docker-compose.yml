@@ -41,6 +41,13 @@ services:
       - wp_data:/var/www/html
       # Must-use plugins auto-activate network-wide (e.g. the `movie` post type).
       - ./mu-plugins:/var/www/html/wp-content/mu-plugins
+      # The `mosaic` block theme registers the Header/Footer nav-menu locations
+      # (functions.php) that WPGraphQL exposes to the frontend. Bind-mounted so
+      # the active theme actually has its files (edits are live, no build step).
+      - ./themes/mosaic:/var/www/html/wp-content/themes/mosaic
+      # Raise PHP upload limits above the image defaults (2M/8M). Multisite also
+      # has its own cap — see README "Increasing the upload size limit".
+      - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   # One-shot initializer: installs WordPress core and the WPGraphQL plugin,
   # then exits. Idempotent — safe to run on every `up`.
@@ -73,6 +80,8 @@ services:
       - ./scripts:/scripts:ro
       # So `wp rewrite flush` sees the movie post type's rewrite rules.
       - ./mu-plugins:/var/www/html/wp-content/mu-plugins
+      # So theme activation / menu-location assignment sees the mosaic theme.
+      - ./themes/mosaic:/var/www/html/wp-content/themes/mosaic
     entrypoint: ["bash", "/scripts/setup.sh"]
 
 volumes:

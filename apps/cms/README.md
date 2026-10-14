@@ -288,6 +288,39 @@ inserter.
 | Block | Component | Attributes |
 | --- | --- | --- |
 | `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
+| `mosaic/hero` | `Hero` | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs) |
+| `mosaic/header` | `Header` | `siteName` (string), `logoSrc` (URL), `href` (link target) |
+| `mosaic/brand-cards` | `BrandCards` | `headline` (string), `cards` (array; each card attaches a `movie`/`tv_series` — `contentType`, `contentId` — plus seeded `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel`, `ctaHref` |
+
+**Attaching a title to a card.** The `mosaic/brand-cards` editor has a per-card
+search field (`blocks/brand-cards-editor.js`) that queries the REST search
+endpoint scoped to the `movie` and `tv_series` subtypes
+(`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
+reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
+the entry, plus `backgroundSrc` from the title's artwork meta
+(`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
+frontend renders the card from those stored fields.
+
+## Increasing the upload size limit
+
+Two separate caps throttle media uploads — raise **both**:
+
+1. **PHP limits.** `php/uploads.ini` (mounted into the container's
+   `conf.d` from `docker-compose.yml`) lifts the image defaults
+   (`upload_max_filesize` 2M / `post_max_size` 8M) to 64M. Edit the values and
+   `docker compose up -d` to recreate the container. Keep
+   `post_max_size` >= `upload_max_filesize` or uploads fail silently.
+2. **Multisite network cap.** The network enforces its own limit
+   (`fileupload_maxk`, default **1500 KB**) that overrides PHP. Set it in
+   Network Admin → **Settings → Upload Settings → "Max upload file size"** (KB),
+   or via wp-cli (keep it <= the PHP limit above):
+
+   ```bash
+   docker compose run --rm wp-cli wp eval 'update_site_option("fileupload_maxk", 65536);'
+   ```
+
+   `65536` KB = 64 MB. Allowed file types live in the same **Upload Settings**
+   screen if a format (e.g. SVG) is being rejected rather than the size.
 
 ## Notes
 
@@ -296,3 +329,8 @@ inserter.
   any shared or public deployment.
 - To add or rename tenants, edit the `TENANTS` list in `scripts/setup.sh` and the
   matching `TENANTS` array in `apps/web/lib/wordpress.ts`.
+- The `mosaic` theme is bind-mounted into the container (like `mu-plugins`). Its
+  `functions.php` registers the Header/Footer nav-menu locations that WPGraphQL
+  exposes by location — if the theme files are missing from the container the
+  `MenuLocationEnum` loses `HEADER`/`FOOTER` and menu queries fail, so the
+  frontend header/footer menus come back empty.

@@ -19,6 +19,7 @@ const preStyle = {
   padding: '1rem',
   whiteSpace: 'pre-wrap' as const,
   wordBreak: 'break-word' as const,
+  fontSize: '0.625rem',
 };
 const errStyle = {
   background: '#2b0000',
@@ -26,6 +27,7 @@ const errStyle = {
   color: '#ff8a8a',
   overflow: 'auto',
   padding: '1rem',
+  fontSize: '0.625rem',
 };
 
 /** Thin bar shown while Draft Mode is on, with a link to exit. */

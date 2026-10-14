@@ -214,6 +214,43 @@ bind-mounted (edits are live on the next request), and needs **no JS/build step*
   `enqueue_block_editor_assets` with the right `wp-*` script dependencies.
 - **Document it** in `apps/cms/README.md` alongside the content types.
 
+### Card components: attach a movie or TV series (editor search field)
+
+A **card** component (anything that surfaces a title — e.g. `StandardCard`,
+`BrandCards`) must let the editor **attach a movie or TV series** rather than
+retype its title/artwork by hand. The block editor therefore needs a **content
+search field**: the editor searches the catalog, picks a result, and the block
+stores a reference to that entry.
+
+- **What to store.** Save a reference, not a copy: a `contentType` attribute
+  (`'movie' | 'tv_series'`) and a `contentId` (number, the post ID). Keep the
+  presentational props (`title`, `imageSrc`, …) as attributes too, so an editor
+  can still override them, but default them from the attached entry. The
+  frontend (`apps/web`) resolves `contentType`/`contentId` to live data when it
+  renders the `@repo/ui` component — the card component itself stays a dumb
+  presentational component driven by its normal props.
+- **The content types.** These are the existing CPTs in
+  `apps/cms/mu-plugins/*-cpt.php`, already `show_in_rest`:
+  - `movie` — REST base `movies` (`/wp-json/wp/v2/movies`)
+  - `tv_series` — REST base `tv-series` (`/wp-json/wp/v2/tv-series`)
+
+  (There is also `tv_season`, REST base `tv-seasons`, if a card ever needs it.)
+- **The search field.** In `<name>-editor.js`, add an Inspector control that
+  queries those post types by title and lets the editor pick one. Use the
+  bundled `wp.*` globals (still **no build step**): debounce the typed query and
+  fetch with `wp.apiFetch` against the REST search endpoint scoped to the two
+  subtypes —
+  `wp.apiFetch({ path: '/wp/v2/search?type=post&subtype=movie,tv_series&search=' + encodeURIComponent(term) })` —
+  then render the results (e.g. a `ComboboxControl`/`SearchControl` from
+  `wp.components`). On select, set `contentType`/`contentId` (and optionally seed
+  `title`/`imageSrc` from the chosen entry). Add `wp-api-fetch` to the editor
+  script's dependency array in `blocks.php`.
+- **Mirror it in the attributes.** `contentType` (enum `movie`/`tv_series`) and
+  `contentId` (integer) go in the block's `attributes` alongside the
+  presentational ones, same as any other attribute above.
+
+**Document it** in `apps/cms/README.md` with the card's other attributes.
+
 **When updating a component:** editing `<Name>.types.ts` props means editing the
 block in the same change — add/remove/rename attributes, update defaults, and
 keep enum values in sync. A prop change without the matching block update is an

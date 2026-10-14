@@ -52,7 +52,7 @@
       system-ui, -apple-system, sans-serif;
     --brand-font-weight-bold: 400;
   }
-  [data-brand='shudder'] {
+  /* [data-brand='shudder'] {
     --brand-primary: #fdb517;
     --brand-secondary: #303030;
   }
@@ -63,7 +63,7 @@
   [data-brand='wetv'] {
     --brand-primary: #fdb517;
     --brand-secondary: #303030;
-  }
+  } */
 }
 
 
