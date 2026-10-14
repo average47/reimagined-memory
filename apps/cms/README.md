@@ -288,6 +288,7 @@ inserter.
 | Block | Component | Attributes |
 | --- | --- | --- |
 | `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
+| `mosaic/logo` | `Logo` | `src` (logo image URL), `alt` (accessible name, usually the brand name) |
 
 ## Notes
 

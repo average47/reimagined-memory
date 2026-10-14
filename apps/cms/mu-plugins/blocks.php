@@ -94,6 +94,20 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/Logo — the logo image is a URL.
+		'mosaic/logo' => array(
+			'script'     => 'logo',
+			'attributes' => array(
+				'src' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'alt' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
 	);
 }
 
@@ -127,12 +141,17 @@ function mosaic_render_hero( $attributes ) {
 	return mosaic_render_block( 'mosaic/hero', $attributes );
 }
 
+function mosaic_render_logo( $attributes ) {
+	return mosaic_render_block( 'mosaic/logo', $attributes );
+}
+
 add_action(
 	'init',
 	function () {
 		$renderers = array(
 			'mosaic/button' => 'mosaic_render_button',
 			'mosaic/hero'   => 'mosaic_render_hero',
+			'mosaic/logo'   => 'mosaic_render_logo',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {

@@ -1,5 +1,5 @@
 import { Fragment, type ReactElement } from 'react';
-import { Button, Hero, type ButtonVariant } from '@repo/ui';
+import { Button, Hero, Logo, type ButtonVariant } from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
 /** Coerce an optional block attribute to a string, or undefined when absent/empty. */
@@ -53,6 +53,10 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           ctaLabel={optionalString(props.ctaLabel)}
           ctaHref={optionalString(props.ctaHref)}
         />
+      );
+    case 'mosaic/logo':
+      return (
+        <Logo src={String(props.src ?? '')} alt={String(props.alt ?? '')} />
       );
     default:
       // Unknown block (e.g. a component without a frontend mapping yet).
