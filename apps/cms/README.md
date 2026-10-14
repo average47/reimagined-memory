@@ -59,6 +59,13 @@ Run from this directory (or via `pnpm --filter cms <script>` from the repo root)
 | `pnpm --filter cms setup` | Tail the first-run initializer logs       |
 | `pnpm --filter cms down`  | Stop services (keeps data)                |
 | `pnpm --filter cms clean` | Stop services and delete volumes (resets) |
+| `pnpm --filter cms export` | Dump the DB + uploads into `exports/` for handoff |
+| `pnpm --filter cms import` | Restore the newest (or a given) export (⚠️ overwrites data) |
+
+`export` writes dated `wordpress-<date>.sql.gz` + `uploads-<date>.tar.gz` into the
+gitignored `exports/` dir (share out-of-band — see `exports/HANDOFF.md`). `import`
+takes an optional date stamp or file path and defaults to the newest dump;
+`FORCE=1` skips its confirmation prompt.
 
 ## Connecting the Next.js app
 
