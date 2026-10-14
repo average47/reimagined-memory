@@ -7,23 +7,23 @@ The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant fronten
 
 ## Services
 
-| Service     | Image                        | Purpose                                                    |
-| ----------- | ---------------------------- | ---------------------------------------------------------- |
-| `db`        | `mariadb:11.4`               | MySQL-compatible database (persisted volume)               |
-| `wordpress` | `wordpress:7.1-php8.3-apache`| WordPress backend, exposed on `WORDPRESS_PORT`             |
-| `wp-cli`    | `wordpress:cli-php8.3`       | One-shot init: core, multisite, 4 tenants, WPGraphQL, exits |
+| Service     | Image                         | Purpose                                                     |
+| ----------- | ----------------------------- | ----------------------------------------------------------- |
+| `db`        | `mariadb:11.4`                | MySQL-compatible database (persisted volume)                |
+| `wordpress` | `wordpress:7.1-php8.3-apache` | WordPress backend, exposed on `WORDPRESS_PORT`              |
+| `wp-cli`    | `wordpress:cli-php8.3`        | One-shot init: core, multisite, 4 tenants, WPGraphQL, exits |
 
 ## Tenants
 
 Subdirectory Multisite — all five sites share one origin:
 
-| Tenant        | URL                             | GraphQL                              |
-| ------------- | ------------------------------- | ------------------------------------ |
-| AMC+ (main)   | http://localhost/               | http://localhost/graphql             |
-| Shudder       | http://localhost/shudder/       | http://localhost/shudder/graphql     |
-| Acorn         | http://localhost/acorn/         | http://localhost/acorn/graphql       |
-| Sundance Now  | http://localhost/sundancenow/   | http://localhost/sundancenow/graphql |
-| We TV         | http://localhost/wetv/          | http://localhost/wetv/graphql        |
+| Tenant       | URL                           | GraphQL                              |
+| ------------ | ----------------------------- | ------------------------------------ |
+| AMC+ (main)  | http://localhost/             | http://localhost/graphql             |
+| Shudder      | http://localhost/shudder/     | http://localhost/shudder/graphql     |
+| Acorn        | http://localhost/acorn/       | http://localhost/acorn/graphql       |
+| Sundance Now | http://localhost/sundancenow/ | http://localhost/sundancenow/graphql |
+| We TV        | http://localhost/wetv/        | http://localhost/wetv/graphql        |
 
 REST is likewise per-tenant, e.g. `http://localhost/shudder/wp-json/wp/v2`.
 
@@ -52,15 +52,15 @@ rewrites. It is idempotent — safe to leave in place across restarts.
 
 Run from this directory (or via `pnpm --filter cms <script>` from the repo root):
 
-| Command                   | Description                               |
-| ------------------------- | ----------------------------------------- |
-| `pnpm --filter cms up`    | Start all services in the background      |
-| `pnpm --filter cms logs`  | Tail logs for all services                |
-| `pnpm --filter cms setup` | Tail the first-run initializer logs       |
-| `pnpm --filter cms down`  | Stop services (keeps data)                |
-| `pnpm --filter cms clean` | Stop services and delete volumes (resets) |
-| `pnpm --filter cms export` | Dump the DB + uploads into `exports/` for handoff |
-| `pnpm --filter cms run import` | Restore the newest (or a given) export (⚠️ overwrites data) |
+| Command                    | Description                                                 |
+| -------------------------- | ----------------------------------------------------------- |
+| `pnpm --filter cms up`     | Start all services in the background                        |
+| `pnpm --filter cms logs`   | Tail logs for all services                                  |
+| `pnpm --filter cms setup`  | Tail the first-run initializer logs                         |
+| `pnpm --filter cms down`   | Stop services (keeps data)                                  |
+| `pnpm --filter cms clean`  | Stop services and delete volumes (resets)                   |
+| `pnpm --filter cms export` | Dump the DB + uploads into `exports/` for handoff           |
+| `pnpm --filter cms import` | Restore the newest (or a given) export (⚠️ overwrites data) |
 
 `export` writes dated `wordpress-<date>.sql.gz` + `uploads-<date>.tar.gz` into the
 gitignored `exports/` dir (share out-of-band — see `exports/HANDOFF.md`). `import`
@@ -94,13 +94,13 @@ type and page hierarchy don't affect the URL.
 Each tenant maps to its own brand origin, defaulting to the local dev proxy
 (`apps/proxy`):
 
-| Tenant | "View Page" target |
-| --- | --- |
-| AMC+ (main) | http://amcplus.localhost:3001/&lt;slug&gt; |
-| Shudder | http://shudder.localhost:3001/&lt;slug&gt; |
-| Acorn | http://acorn.localhost:3001/&lt;slug&gt; |
+| Tenant       | "View Page" target                             |
+| ------------ | ---------------------------------------------- |
+| AMC+ (main)  | http://amcplus.localhost:3001/&lt;slug&gt;     |
+| Shudder      | http://shudder.localhost:3001/&lt;slug&gt;     |
+| Acorn        | http://acorn.localhost:3001/&lt;slug&gt;       |
 | Sundance Now | http://sundancenow.localhost:3001/&lt;slug&gt; |
-| We TV | http://wetv.localhost:3001/&lt;slug&gt; |
+| We TV        | http://wetv.localhost:3001/&lt;slug&gt;        |
 
 Point it at deployed frontends with the `MOSAIC_FRONTEND_ORIGINS` env var — a
 comma-separated list of `brand=origin` pairs. Unlisted brands keep their
@@ -134,22 +134,23 @@ Media keeps WordPress URLs too, since the frontend has no attachment route.
 a `genre` taxonomy, and its custom fields. It lives in `wp-content/mu-plugins`
 (bind-mounted by compose), so it auto-activates network-wide for every tenant —
 no per-site activation. Edits to the file are live on the next request; a `down`
-+ `up` re-flushes rewrites so the `/movies` routes resolve.
+
+- `up` re-flushes rewrites so the `/movies` routes resolve.
 
 Field mapping from the schema.org/Movie JSON-LD:
 
-| JSON-LD             | WordPress                                                              |
-| ------------------- | --------------------------------------------------------------------- |
-| `name`              | post title                                                            |
-| `description`       | post content                                                          |
-| `genre[]`           | `genre` taxonomy terms                                                 |
-| `url`               | `movieUrl`                                                             |
-| `contentRating[]`   | `contentRating`                                                        |
-| `duration`          | `duration` (ISO-8601, e.g. `PT1H53M25S`)                              |
-| `releasedEvent`     | `datePublished`, `releaseRegions`                                      |
-| `actor[].name`      | `actors` (order preserved)                                            |
-| `image`             | `image` (`contentUrl`, `dateModified`, `regionsAllowed`)              |
-| `potentialAction`   | `watchTargets` (EntryPoints), `accessSpecifications` (subscriptions)  |
+| JSON-LD           | WordPress                                                            |
+| ----------------- | -------------------------------------------------------------------- |
+| `name`            | post title                                                           |
+| `description`     | post content                                                         |
+| `genre[]`         | `genre` taxonomy terms                                               |
+| `url`             | `movieUrl`                                                           |
+| `contentRating[]` | `contentRating`                                                      |
+| `duration`        | `duration` (ISO-8601, e.g. `PT1H53M25S`)                             |
+| `releasedEvent`   | `datePublished`, `releaseRegions`                                    |
+| `actor[].name`    | `actors` (order preserved)                                           |
+| `image`           | `image` (`contentUrl`, `dateModified`, `regionsAllowed`)             |
+| `potentialAction` | `watchTargets` (EntryPoints), `accessSpecifications` (subscriptions) |
 
 Both REST and GraphQL are exposed. Query a tenant's movies over GraphQL:
 
@@ -162,10 +163,25 @@ query {
       duration
       contentRating
       actors
-      genres { nodes { name } }
-      image { contentUrl regionsAllowed }
-      watchTargets { urlTemplate actionPlatform }
-      accessSpecifications { subscriptionName availabilityStarts availabilityEnds eligibleRegions }
+      genres {
+        nodes {
+          name
+        }
+      }
+      image {
+        contentUrl
+        regionsAllowed
+      }
+      watchTargets {
+        urlTemplate
+        actionPlatform
+      }
+      accessSpecifications {
+        subscriptionName
+        availabilityStarts
+        availabilityEnds
+        eligibleRegions
+      }
     }
   }
 }
@@ -183,19 +199,19 @@ with movies and follows the same REST + GraphQL exposure.
 Field mapping (differs from Movie: no `duration`; adds `seasonNumber` and
 `partOfSeries`):
 
-| JSON-LD             | WordPress                                                              |
-| ------------------- | --------------------------------------------------------------------- |
-| `name`              | post title                                                            |
-| `description`       | post content                                                          |
-| `genre[]`           | `genre` taxonomy terms                                                 |
-| `url`               | `seriesUrl`                                                            |
-| `contentRating[]`   | `contentRating`                                                        |
-| `seasonNumber`      | `seasonNumber` (Int)                                                   |
-| `partOfSeries`      | `partOfSeries` (`id`, `name`)                                          |
-| `releasedEvent`     | `datePublished`, `releaseRegions`                                      |
-| `actor[].name`      | `actors` (order preserved)                                            |
-| `image`             | `image` (`contentUrl`, `dateModified`, `regionsAllowed`)              |
-| `potentialAction`   | `watchTargets` (EntryPoints), `accessSpecifications` (subscriptions)  |
+| JSON-LD           | WordPress                                                            |
+| ----------------- | -------------------------------------------------------------------- |
+| `name`            | post title                                                           |
+| `description`     | post content                                                         |
+| `genre[]`         | `genre` taxonomy terms                                               |
+| `url`             | `seriesUrl`                                                          |
+| `contentRating[]` | `contentRating`                                                      |
+| `seasonNumber`    | `seasonNumber` (Int)                                                 |
+| `partOfSeries`    | `partOfSeries` (`id`, `name`)                                        |
+| `releasedEvent`   | `datePublished`, `releaseRegions`                                    |
+| `actor[].name`    | `actors` (order preserved)                                           |
+| `image`           | `image` (`contentUrl`, `dateModified`, `regionsAllowed`)             |
+| `potentialAction` | `watchTargets` (EntryPoints), `accessSpecifications` (subscriptions) |
 
 GraphQL:
 
@@ -207,12 +223,30 @@ query {
       seasonNumber
       seriesUrl
       contentRating
-      partOfSeries { id name }
+      partOfSeries {
+        id
+        name
+      }
       actors
-      genres { nodes { name } }
-      image { contentUrl regionsAllowed }
-      watchTargets { urlTemplate actionPlatform }
-      accessSpecifications { subscriptionName availabilityStarts availabilityEnds eligibleRegions }
+      genres {
+        nodes {
+          name
+        }
+      }
+      image {
+        contentUrl
+        regionsAllowed
+      }
+      watchTargets {
+        urlTemplate
+        actionPlatform
+      }
+      accessSpecifications {
+        subscriptionName
+        availabilityStarts
+        availabilityEnds
+        eligibleRegions
+      }
     }
   }
 }
@@ -237,12 +271,30 @@ query {
       seasonNumber
       seasonUrl
       contentRating
-      partOfSeries { id name }
+      partOfSeries {
+        id
+        name
+      }
       actors
-      genres { nodes { name } }
-      image { contentUrl regionsAllowed }
-      watchTargets { urlTemplate actionPlatform }
-      accessSpecifications { subscriptionName availabilityStarts availabilityEnds eligibleRegions }
+      genres {
+        nodes {
+          name
+        }
+      }
+      image {
+        contentUrl
+        regionsAllowed
+      }
+      watchTargets {
+        urlTemplate
+        actionPlatform
+      }
+      accessSpecifications {
+        subscriptionName
+        availabilityStarts
+        availabilityEnds
+        eligibleRegions
+      }
     }
   }
 }
@@ -255,11 +307,11 @@ REST equivalents live at `<tenant>/wp-json/wp/v2/tv-seasons` (custom fields unde
 `mu-plugins/schema-import.php` adds a `wp schema import` WP-CLI command that
 loads a schema.org JSON feed and routes each record by its `@type`:
 
-| `@type`    | Post type    |
-| ---------- | ------------ |
-| `Movie`    | `movie`      |
-| `TVSeries` | `tv_series`  |
-| `TVSeason` | `tv_season`  |
+| `@type`    | Post type   |
+| ---------- | ----------- |
+| `Movie`    | `movie`     |
+| `TVSeries` | `tv_series` |
+| `TVSeason` | `tv_season` |
 
 The feed may be a single JSON-LD object, a JSON array of objects, an object with
 a top-level `@graph` array, or a schema.org `DataFeed` (records under
@@ -292,11 +344,23 @@ component's serializable props. Each block also has a plain-JS editor script in
 `mu-plugins/blocks/<name>-editor.js` (no build step) so it appears in the
 inserter.
 
-| Block | Component | Attributes |
-| --- | --- | --- |
-| `mosaic/button` | `Button` | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set) |
-| `mosaic/hero` | `Hero` | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs) |
-| `mosaic/header` | `Header` | `siteName` (string), `logoSrc` (URL), `href` (link target) |
+| Block                | Component    | Attributes                                                                                                                                                                                                                       |
+| -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mosaic/button`      | `Button`     | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set)                                                                     |
+| `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
+| `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
+| `mosaic/brand-cards` | `BrandCards` | `headline` (string), `cards` (array; each card attaches a `movie`/`tv_series` — `contentType`, `contentId` — plus seeded `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel`, `ctaHref`                        |
+| `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
+
+**Attaching a title to a card.** The `mosaic/brand-cards` editor has a per-card
+search field (`blocks/brand-cards-editor.js`), and the standalone `mosaic/card`
+block has the same field (`blocks/card-editor.js`); both query the REST search
+endpoint scoped to the `movie` and `tv_series` subtypes
+(`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
+reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
+the entry, plus `backgroundSrc` from the title's artwork meta
+(`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
+frontend renders the card from those stored fields.
 
 ## Increasing the upload size limit
 
