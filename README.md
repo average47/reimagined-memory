@@ -2,14 +2,14 @@
 
 A TypeScript + Tailwind monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/).
 
-> **Install pnpm 12.10.1 globally:** `npm install -g pnpm@12.10.1`
+> **Install pnpm 12.11.2 globally:** `npm install -g pnpm@12.11.2`
 >
-> This repo pins `packageManager` to pnpm 12.10.1. pnpm 12 ships as a native
+> This repo pins `packageManager` to pnpm 12.11.2. pnpm 12 ships as a native
 > binary, and both of the usual ways of picking up a pinned version currently
 > mishandle it:
 >
 > - Corepack (0.33.0) fails with `Cannot find module
->   .../pnpm/12.10.1/bin/pnpm.cjs` — the JS entry point pnpm 12 no longer ships.
+>   .../pnpm/<version>/bin/pnpm.cjs` — the JS entry point pnpm 12 no longer ships.
 > - pnpm's own version switching fails with `ENOEXEC` — it downloads the package
 >   but skips the postinstall that puts the native binary in place, leaving a
 >   placeholder text file at `bin/pnpm`.
@@ -20,13 +20,30 @@ A TypeScript + Tailwind monorepo managed with [pnpm workspaces](https://pnpm.io/
 ## Getting started
 
 **Prerequisites:** [Node](https://nodejs.org) ≥ 20 and [pnpm](https://pnpm.io)
-12.10.1 (see the note above). Docker is only needed for the optional
+12.11.2 (see the note above). Docker is only needed for the optional
 [headless CMS](#headless-cms-multi-tenant).
 
 ```bash
 pnpm install   # install all workspace dependencies
 pnpm dev       # start web (:3000), the brand proxy (:3001) and Storybook (:61000)
 ```
+
+> **One-time, on macOS behind a TLS-inspecting proxy:** `apps/web`'s `dev` and
+> `build` scripts pass `NODE_EXTRA_CA_CERTS=.certs/ca-bundle.pem`, so Node trusts
+> the system (and any corporate) CAs when fetching from the CMS. The bundle is
+> gitignored — generate it once:
+>
+> ```bash
+> mkdir -p apps/web/.certs
+> security find-certificate -a -p \
+>   /System/Library/Keychains/SystemRootCertificates.keychain > apps/web/.certs/ca-bundle.pem
+> security find-certificate -a -p /Library/Keychains/System.keychain \
+>   >> apps/web/.certs/ca-bundle.pem
+> ```
+>
+> Without it Node just warns and falls back to its bundled roots, which is fine
+> for plain-HTTP local development; point `NODE_EXTRA_CA_CERTS` elsewhere to use
+> your own bundle.
 
 Then open the app **through the proxy** so brand theming resolves from the
 subdomain:
@@ -74,12 +91,15 @@ Run from the repo root:
 | `pnpm build`        | Build all packages                           |
 | `pnpm typecheck`    | Type-check all packages                      |
 | `pnpm lint`         | Lint all packages                            |
+| `pnpm clean`        | Remove build output and `node_modules`       |
 
 To work on a single package, use pnpm filters, e.g. `pnpm --filter web dev`.
 
 ## Packages
 
-- **`@repo/ui`** — React components (`Icon`, …) styled with Tailwind.
+- **`@repo/ui`** — React components (`Icon`, `Button`, `Card`, `Header`, `Hero`)
+  styled with Tailwind. See [packages/ui/AGENTS.md](packages/ui/AGENTS.md) for the
+  conventions every component follows.
 - **`@repo/utils`** — helpers like `cn`, `formatCurrency`, `formatDate`, `truncate`.
 
 ## Local dev proxy (brand subdomains)
