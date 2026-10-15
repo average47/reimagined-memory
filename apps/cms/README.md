@@ -76,6 +76,14 @@ takes an optional date stamp or file path and defaults to the newest dump;
 WORDPRESS_BASE_URL=http://localhost
 ```
 
+Draft Mode previews need three more (see [Preview](#preview-draft-mode) below):
+
+```
+WORDPRESS_PREVIEW_SECRET=mosaic-dev-preview-secret
+WORDPRESS_PREVIEW_USER=admin
+WORDPRESS_PREVIEW_APP_PASSWORD=
+```
+
 The web app's data fetcher lives in `apps/web/lib/wordpress.ts`; the `/posts`
 page demonstrates switching between all five tenants.
 
@@ -112,19 +120,65 @@ environment:
   MOSAIC_FRONTEND_ORIGINS: amcplus=https://amcplus.com,shudder=https://shudder.com,acorn=https://acorn.tv
 ```
 
-Three things it deliberately leaves alone:
+Two things it deliberately leaves alone:
 
 - **The content API.** The filters only run for admin and REST requests, so
   WPGraphQL's `uri`/`link` fields — what `apps/web` actually reads — stay as
   WordPress generates them.
-- **Preview.** The **Preview** button still opens WordPress. `apps/web` resolves
-  pages over the public GraphQL endpoint and has no draft-preview route, so a
-  frontend preview link would render "no content found" for exactly the
-  unpublished posts preview exists to show.
 - **"Visit Site"** and `home_url()`, which is what builds the REST and GraphQL
   endpoint URLs — rewriting those would break the content API.
 
 Media keeps WordPress URLs too, since the frontend has no attachment route.
+
+The **Preview** button is handled separately — see below.
+
+## Preview (Draft Mode)
+
+`mu-plugins/headless-preview.php` points the **Preview** button at the Next.js
+frontend's Draft Mode route instead of WordPress's theme, so unpublished changes
+preview on the real site. It filters `preview_post_link` at priority 20 —
+after `headless-permalinks.php`'s own keep-Preview-on-WordPress filter (priority
+10) — so it wins regardless of plugin load order, and it reuses that file's
+tenant→origin resolver, so each tenant previews on its own brand origin.
+
+The round trip:
+
+1. **Preview** links to `<frontend origin>/api/preview?secret=…&id=…&type=…&slug=…`.
+2. [`apps/web/app/api/preview/route.ts`](../web/app/api/preview/route.ts)
+   validates the shared secret, enables Draft Mode, stores the target as a
+   `mosaic-preview` (`<type>:<id>`) cookie, and redirects to `/<slug>`.
+3. The page reads that cookie and fetches the draft over the **authenticated**
+   REST API (`?context=edit`, HTTP Basic with an Application Password) via
+   `getPreviewById()` in `apps/web/lib/wordpress.ts`, rather than the public
+   GraphQL endpoint, which only exposes published content.
+4. A banner on the previewed page links to `/api/preview/exit`, which disables
+   Draft Mode and clears the cookie.
+
+Configuration — the secret must match on both sides:
+
+| Side      | Variable                         | Notes                                        |
+| --------- | -------------------------------- | -------------------------------------------- |
+| WordPress | `MOSAIC_PREVIEW_SECRET`          | Falls back to a known dev value when unset    |
+| Next.js   | `WORDPRESS_PREVIEW_SECRET`       | Same fallback — keep the two in sync          |
+| Next.js   | `WORDPRESS_PREVIEW_USER`         | WordPress user the draft fetch authenticates as |
+| Next.js   | `WORDPRESS_PREVIEW_APP_PASSWORD` | That user's Application Password (required)   |
+
+Locally both sides use the fallback, so only the Application Password has to be
+filled in (`apps/web/.env.local`). For a deployment, set a real secret on the
+`wordpress` service in `docker-compose.yml` (alongside `MOSAIC_FRONTEND_ORIGINS`)
+and mirror it in the frontend's environment.
+
+Create the Application Password in wp-admin (**Users → Profile → Application
+Passwords**) or with wp-cli:
+
+```bash
+docker compose run --rm --entrypoint wp wp-cli user application-password \
+  create admin "mosaic-preview" --porcelain --url=http://localhost/
+```
+
+WordPress hides Application Passwords on non-SSL installs, so the plugin
+re-enables them (`wp_is_application_passwords_available`) for this plain-HTTP
+local network; over HTTPS that filter is a no-op.
 
 ## Content types
 
@@ -133,9 +187,8 @@ Media keeps WordPress URLs too, since the frontend has no attachment route.
 `mu-plugins/movie-cpt.php` registers a `movie` custom post type (schema.org/Movie),
 a `genre` taxonomy, and its custom fields. It lives in `wp-content/mu-plugins`
 (bind-mounted by compose), so it auto-activates network-wide for every tenant —
-no per-site activation. Edits to the file are live on the next request; a `down`
-
-- `up` re-flushes rewrites so the `/movies` routes resolve.
+no per-site activation. Edits to the file are live on the next request; a
+`down`/`up` cycle re-flushes rewrites so the `/movies` routes resolve.
 
 Field mapping from the schema.org/Movie JSON-LD:
 
@@ -359,6 +412,27 @@ reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
 the entry, plus `backgroundSrc` from the title's artwork meta
 (`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
 frontend renders the card from those stored fields.
+
+## Menu item options
+
+Menus are authored in the classic editor (**Appearance → Menus**) and read by the
+frontend over WPGraphQL. Two mu-plugins add per-item checkboxes there:
+
+| Checkbox           | mu-plugin           | Stored as                     | GraphQL field        |
+| ------------------ | ------------------- | ----------------------------- | -------------------- |
+| **Open in new tab** | `menu-new-tab.php`  | `_menu_item_target` (`_blank`) | `MenuItem.target`    |
+| **Use icon**        | `menu-use-icon.php` | `_mosaic_use_icon` (`1`)       | `MenuItem.useIcon`   |
+
+- **Open in new tab** binds to WordPress's native link-target field (normally
+  hidden behind Screen Options) and needs no custom GraphQL field —
+  `MenuItem.target` is built in. `apps/web`'s `Footer` renders
+  `target="_blank"` + `rel="noopener noreferrer"` when it is `_blank`.
+- **Use icon** is a custom flag, so `menu-use-icon.php` registers both the meta
+  and the `useIcon` Boolean on `MenuItem`. The `Footer` renders those items as
+  sprite icons (with the label as the `aria-label`) instead of text.
+
+Both clear only when the Menus editor posts the form, so programmatic/REST
+updates don't silently reset them.
 
 ## Increasing the upload size limit
 
