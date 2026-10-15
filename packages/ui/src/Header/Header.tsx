@@ -1,10 +1,18 @@
-import type { JSX } from 'react';
+'use client';
+
+import { useEffect, useRef, useState, type JSX } from 'react';
 import { cn } from '@repo/utils';
 import type { HeaderProps } from './Header.types';
 
 /*
  * Header — site top bar with the brand logo (or site name) anchored in the
  * upper-left corner.
+ *
+ * It is fixed to the top-left of the viewport and starts transparent so page
+ * content shows through, then fades to the opaque background as the page
+ * scrolls, reaching full opacity at twice the bar's own height (and fading back
+ * on the way up). The opacity is read straight off the scroll position rather
+ * than animated with a CSS transition, so scrolling is what drives it.
  *
  * Mobile-first: the unprefixed layout is the mobile bar; only the horizontal
  * padding grows at md:/lg: to match the wider frames. Colours, type and spacing
@@ -20,6 +28,34 @@ export default function Header({
   className,
   ...props
 }: HeaderProps): JSX.Element {
+  const barRef = useRef<HTMLElement>(null);
+  const [opacity, setOpacity] = useState(0);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const update = (): void => {
+      frame = 0;
+      const fadeDistance = (barRef.current?.offsetHeight ?? 0) * 2;
+      setOpacity(
+        fadeDistance > 0 ? Math.min(window.scrollY / fadeDistance, 1) : 0,
+      );
+    };
+
+    const onScroll = (): void => {
+      if (frame === 0) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      if (frame !== 0) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+
   const wordmark = logoSrc ? (
     <img
       src={logoSrc}
@@ -34,13 +70,19 @@ export default function Header({
 
   return (
     <header
+      ref={barRef}
       data-component="Header"
       className={cn(
-        'flex items-center bg-background-default px-4 py-4 md:px-8 lg:px-13',
+        'fixed inset-x-0 top-0 z-50 flex items-center px-4 py-4 md:px-8 lg:px-13',
         className,
       )}
       {...props}
     >
+      <span
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-background-default"
+        style={{ opacity }}
+      />
       {href !== undefined ? (
         <a
           href={href}

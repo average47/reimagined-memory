@@ -94,33 +94,6 @@ function mosaic_blocks() {
 				),
 			),
 		),
-		// packages/ui/src/BrandCards — section with a headline, a row of cards and
-		// an optional CTA. Each card references an attached `movie`/`tv_series`
-		// (contentType + contentId) and carries display fields seeded from it.
-		'mosaic/brand-cards' => array(
-			'script'     => 'brand-cards',
-			'attributes' => array(
-				'headline' => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-				'cards'    => array(
-					'type'    => 'array',
-					'default' => array(),
-					// Each item: { contentType: 'movie'|'tv_series', contentId:int,
-					// label, imageSrc, imageAlt, backgroundSrc, href }.
-					'items'   => array( 'type' => 'object' ),
-				),
-				'ctaLabel' => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-				'ctaHref'  => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-			),
-		),
 		// packages/ui/src/Card — a single card that attaches a `movie`/`tv_series`
 		// (contentType + contentId) and carries display fields seeded from it.
 		'mosaic/card' => array(
@@ -213,10 +186,6 @@ function mosaic_render_header( $attributes ) {
 	return mosaic_render_block( 'mosaic/header', $attributes );
 }
 
-function mosaic_render_brand_cards( $attributes ) {
-	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
-}
-
 function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
@@ -228,7 +197,6 @@ add_action(
 			'mosaic/button' => 'mosaic_render_button',
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/header'      => 'mosaic_render_header',
-			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
 			'mosaic/card'        => 'mosaic_render_card',
 		);
 

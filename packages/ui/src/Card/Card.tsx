@@ -10,12 +10,12 @@ import type { CardProps } from './Card.types';
  * no tablet variant, so no `md:` overrides.
  *
  * The card sizes itself to the design (via native `aspect-ratio`) but callers
- * can override the width with `className` — e.g. BrandCards lays two per row on
- * mobile. Imagery and caption are prop-supplied, so they stay dynamic.
+ * can override the width with `className`. Imagery and caption are
+ * prop-supplied, so they stay dynamic.
  *
  * Note: a few values have no token — the desktop 36px x-padding (the spacing
  * scale jumps 32→40), the mobile logo box (80×36) and the desktop logo width
- * (100) — so those use arbitrary values, same as BrandCards/Button.
+ * (100) — so those use arbitrary values, same as Button.
  */
 export default function Card({
   label,

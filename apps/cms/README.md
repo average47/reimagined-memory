@@ -10,7 +10,7 @@ The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant fronten
 | Service     | Image                         | Purpose                                                     |
 | ----------- | ----------------------------- | ----------------------------------------------------------- |
 | `db`        | `mariadb:11.4`                | MySQL-compatible database (persisted volume)                |
-| `wordpress` | `wordpress:7.1-php8.3-apache` | WordPress backend, exposed on `WORDPRESS_PORT`              |
+| `wordpress` | `wordpress:7.1.3-php8.3-apache` | WordPress backend, exposed on `WORDPRESS_PORT`              |
 | `wp-cli`    | `wordpress:cli-php8.3`        | One-shot init: core, multisite, 4 tenants, WPGraphQL, exits |
 
 ## Tenants
@@ -349,12 +349,10 @@ inserter.
 | `mosaic/button`      | `Button`     | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set)                                                                     |
 | `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
 | `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
-| `mosaic/brand-cards` | `BrandCards` | `headline` (string), `cards` (array; each card attaches a `movie`/`tv_series` — `contentType`, `contentId` — plus seeded `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel`, `ctaHref`                        |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
 
-**Attaching a title to a card.** The `mosaic/brand-cards` editor has a per-card
-search field (`blocks/brand-cards-editor.js`), and the standalone `mosaic/card`
-block has the same field (`blocks/card-editor.js`); both query the REST search
+**Attaching a title to a card.** The `mosaic/card` editor has a per-card search
+field (`blocks/card-editor.js`), which queries the REST search
 endpoint scoped to the `movie` and `tv_series` subtypes
 (`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
 reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
@@ -385,6 +383,9 @@ Two separate caps throttle media uploads — raise **both**:
 
 ## Notes
 
+- `mu-plugins/admin-menu-hide.php` hides **Posts**, **Comments** and **Tools**
+  from the wp-admin sidebar — content is authored as pages, movies, TV series
+  and TV seasons, and the headless frontend has no comments.
 - Data lives in the `db_data` and `wp_data` Docker volumes. `clean` deletes them.
 - Credentials in `.env.example` are for local development only — change them for
   any shared or public deployment.

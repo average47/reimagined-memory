@@ -54,32 +54,9 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           ctaHref={optionalString(props.ctaHref)}
         />
       );
-    case 'mosaic/brand-cards': {
-      // Each card attaches a movie/tv_series in the editor, which seeds these
-      // display fields; render from them (same approach as the other blocks).
-      const rawCards = Array.isArray(props.cards) ? props.cards : [];
-      const cards: BrandCardItem[] = rawCards.map((raw) => {
-        const card = (raw ?? {}) as Record<string, unknown>;
-        return {
-          label: String(card.label ?? ''),
-          imageSrc: optionalString(card.imageSrc),
-          imageAlt: optionalString(card.imageAlt),
-          backgroundSrc: optionalString(card.backgroundSrc),
-          href: optionalString(card.href),
-        };
-      });
-      return (
-        <BrandCards
-          headline={String(props.headline ?? '')}
-          cards={cards}
-          ctaLabel={optionalString(props.ctaLabel)}
-          ctaHref={optionalString(props.ctaHref)}
-        />
-      );
-    }
     case 'mosaic/card':
-      // Like brand-cards: the attached movie/tv_series seeds these display
-      // fields in the editor; render from them.
+      // The attached movie/tv_series seeds these display fields in the editor;
+      // render from them.
       return (
         <Card
           label={String(props.label ?? '')}

@@ -37,6 +37,24 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Scroll the canvas: the fixed bar starts transparent over the content and
+ * fades in, reaching full opacity at twice its height.
+ */
+export const ScrollFade: Story = {
+  args: {
+    logoSrc: logo,
+  },
+  render: (args) => (
+    <div className="h-[200vh] bg-background-surface p-10">
+      <Header {...args} />
+      <p className="font-body text-6 text-text-secondary">
+        Scroll down to fade the header in.
+      </p>
+    </div>
+  ),
+};
+
 /** No logo supplied — falls back to the site name as a text wordmark. */
 export const TextFallback: Story = {};
 
