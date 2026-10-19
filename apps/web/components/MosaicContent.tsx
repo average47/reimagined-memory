@@ -1,5 +1,5 @@
 import { Fragment, type ReactElement } from 'react';
-import { Button, Card, Hero, type ButtonVariant } from '@repo/ui';
+import { BrandCards, Button, Card, Hero, type ButtonVariant } from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
 /** Coerce an optional block attribute to a string, or undefined when absent/empty. */
@@ -66,6 +66,28 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           href={optionalString(props.href)}
         />
       );
+    case 'mosaic/brand-cards': {
+      // Each card's attached movie/tv_series seeds its display fields in the
+      // editor; render from them (same mapping as `mosaic/card`).
+      const cards = Array.isArray(props.cards) ? props.cards : [];
+      return (
+        <BrandCards
+          title={String(props.title ?? '')}
+          cards={cards.map((item) => {
+            const card = (item ?? {}) as Record<string, unknown>;
+            return {
+              label: String(card.label ?? ''),
+              imageSrc: optionalString(card.imageSrc),
+              imageAlt: optionalString(card.imageAlt),
+              backgroundSrc: optionalString(card.backgroundSrc),
+              href: optionalString(card.href),
+            };
+          })}
+          ctaLabel={optionalString(props.ctaLabel)}
+          ctaHref={optionalString(props.ctaHref)}
+        />
+      );
+    }
     default:
       // Unknown block (e.g. a component without a frontend mapping yet).
       return null;
