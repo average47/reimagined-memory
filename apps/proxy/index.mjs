@@ -13,7 +13,8 @@ const STORYBOOK_PORT = process.env.STORYBOOK_PORT
 const colors = ['green', 'yellow', 'blue', 'magenta', 'cyan', 'gray', 'grey'];
 
 // Maps *.localhost subdomains to the real hostnames the Next.js middleware
-// uses for site resolution via siteConfigDomainMap.
+// uses for site resolution via siteConfigDomainMap. A host that isn't listed
+// here (including a bare `localhost`) falls through to DEFAULT_HOST.
 const domainMap = {
   'acorn.localhost': 'acorn.tv',
   'amcplus.localhost': 'amcplus.com',
@@ -21,6 +22,13 @@ const domainMap = {
   'sundancenow.localhost': 'sundancenow.com',
   'wetv.localhost': 'wetv.com',
 };
+
+/*
+ * Host forwarded for anything not in `domainMap`. `getSiteConfig` maps this
+ * sentinel to the unbranded default site, so an unrecognised subdomain renders
+ * with no brand rather than silently borrowing one.
+ */
+const DEFAULT_HOST = 'default';
 
 const BASE = '/styleguide';
 
@@ -88,7 +96,7 @@ function stripBase(url) {
 
 const server = http.createServer((req, res) => {
   const [hostname] = (req.headers.host ?? '').split(':');
-  const mappedHost = domainMap[hostname] ?? 'shudder.com';
+  const mappedHost = domainMap[hostname] ?? DEFAULT_HOST;
   const url = req.url ?? '/';
 
   // The manager's asset URLs are relative, so the document must be served from
@@ -145,6 +153,11 @@ server.listen(PROXY_PORT, () => {
       )
     );
   }
+  console.log(
+    chalk.white.bold(
+      `http://localhost:${PROXY_PORT} → ${DEFAULT_HOST} (no brand) → Next.js :${NEXT_PORT}`
+    )
+  );
   console.log(
     chalk.bold(
       `http://<brand>.localhost:${PROXY_PORT}${BASE} → Storybook :${STORYBOOK_PORT}`

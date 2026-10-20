@@ -1,5 +1,15 @@
-/** Stable identifiers for each WordPress Multisite tenant. */
-export type TenantKey = 'main' | 'shudder' | 'acorn' | 'sundancenow' | 'wetv';
+/**
+ * Stable identifiers for each WordPress Multisite tenant. `main` is the
+ * network's primary site, which belongs to no brand; every brand — AMC+
+ * included — has its own subdirectory tenant.
+ */
+export type TenantKey =
+  | 'main'
+  | 'amcplus'
+  | 'shudder'
+  | 'acorn'
+  | 'sundancenow'
+  | 'wetv';
 
 export interface Tenant {
   /** Stable key used in code and as the `?tenant=` query value. */
@@ -72,3 +82,54 @@ export interface GraphQLResponse<T> {
 export type WpFetchInit = Pick<RequestInit, 'cache' | 'headers'> & {
   next?: { revalidate?: number | false; tags?: string[] };
 };
+
+/* -------------------------------------------------------------------------- */
+/* Shared library                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Where a piece of content was actually resolved from.
+ *
+ * Brand tenants fall back to the shared library, so a render needs to know
+ * whether it is showing the brand's own content or the library's copy — see
+ * `resolvePageBySlug` / `resolveMenu` in `wordpress.ts`.
+ */
+export interface Resolved<T> {
+  value: T;
+  /** The tenant that actually served it. */
+  source: TenantKey;
+  /** True when it came from the shared library rather than the brand's site. */
+  shared: boolean;
+}
+
+/** An attachment in the shared media library (`mosaic/v1/library/media`). */
+export interface LibraryMediaItem {
+  id: number;
+  url: string;
+  title: string;
+  alt: string;
+  mimeType: string;
+  width: number | null;
+  height: number | null;
+  /** Generated sizes, keyed by WordPress size name (`thumbnail`, `medium`, …). */
+  sizes: Record<string, { url: string; width: number; height: number }>;
+}
+
+/** A page/post reference in the shared library (`mosaic/v1/library/content`). */
+export interface LibraryContentItem {
+  id: number;
+  type: string;
+  slug: string;
+  title: string;
+  date: string;
+}
+
+/** Which site backs the shared library (`mosaic/v1/library`). */
+export interface LibraryInfo {
+  blogId: number;
+  url: string;
+  path: string;
+  name: string;
+  /** True when the queried tenant *is* the library. */
+  isLibrary: boolean;
+}

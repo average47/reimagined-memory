@@ -221,12 +221,25 @@ add_action(
 add_action(
 	'enqueue_block_editor_assets',
 	function () {
+		/*
+		 * Shared-library media picker (window.mosaicLibrary.SharedMediaButton).
+		 * Registered once and listed as a dependency below, so every block
+		 * editor can offer the library's artwork alongside its own uploads.
+		 */
+		wp_register_script(
+			'mosaic-library-media',
+			plugins_url( 'blocks/library-media.js', __FILE__ ),
+			array( 'wp-element', 'wp-components', 'wp-i18n', 'wp-api-fetch' ),
+			filemtime( __DIR__ . '/blocks/library-media.js' ),
+			true
+		);
+
 		foreach ( mosaic_blocks() as $block ) {
 			$slug = $block['script'];
 			wp_enqueue_script(
 				"mosaic-{$slug}-editor",
 				plugins_url( "blocks/{$slug}-editor.js", __FILE__ ),
-				array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-media-utils', 'wp-api-fetch' ),
+				array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-media-utils', 'wp-api-fetch', 'mosaic-library-media' ),
 				filemtime( __DIR__ . "/blocks/{$slug}-editor.js" ),
 				true
 			);

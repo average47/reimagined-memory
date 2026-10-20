@@ -4,18 +4,20 @@
 # - Waits for wp-config.php (written by the wordpress container) and the DB.
 # - Installs WordPress core on first run.
 # - Converts the install into a subdirectory Multisite network.
-# - Creates the additional tenant sites (5 total).
+# - Creates the brand tenant sites (5 brands + the unbranded primary site).
 # - Network-activates WPGraphQL so every tenant exposes /graphql.
 # - Writes the subdirectory-multisite .htaccess and flushes rewrites.
 set -euo pipefail
 
 BASE_URL="${WORDPRESS_SITE_URL}"
 
-# Additional tenants beyond the primary site. "slug:Title" pairs.
-# The primary (network) site is AMC+; these four make five tenants total.
+# Brand tenants, as "slug:Title" pairs. Every brand — AMC+ included — gets its
+# own subdirectory site, so the primary (network) site at `/` belongs to no
+# brand and serves as the unbranded default (see step 3b).
 # Existing sites are left untouched (matched by path), so titles set in the
 # admin are preserved.
 TENANTS=(
+  "amcplus:AMC+"
   "shudder:Shudder"
   "acorn:Acorn"
   "sundancenow:Sundance Now"
@@ -66,6 +68,18 @@ for entry in "${TENANTS[@]}"; do
     wp site create --slug="${slug}" --title="${title}" --email="${WORDPRESS_ADMIN_EMAIL}"
   fi
 done
+
+# 3b. The primary site belongs to no brand. Fresh installs already get the
+# neutral "${WORDPRESS_SITE_TITLE}" from `wp core install` above, but installs
+# created before AMC+ moved to its own tenant still carry "AMC+" at `/`. Rename
+# only that exact stale value, so a title deliberately set in the admin is kept.
+primary_title="$(wp option get blogname --url="${BASE_URL}" 2>/dev/null || true)"
+if [ "${primary_title}" = "AMC+" ]; then
+  echo "Primary site is still titled 'AMC+' — renaming to '${WORDPRESS_SITE_TITLE}'..."
+  wp option update blogname "${WORDPRESS_SITE_TITLE}" --url="${BASE_URL}"
+else
+  echo "Primary site title ('${primary_title}') is not the stale brand default — leaving it."
+fi
 
 # 4. Update core files to the target version, then apply DB upgrades.
 # The official image only copies core files into an empty volume, so an existing

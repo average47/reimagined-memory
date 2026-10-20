@@ -31,12 +31,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Multisite site path => brand key. Subdirectory Multisite, so the network's
- * primary site (AMC+) lives at the root. Mirrors the tenant mapping in
- * `apps/web/lib/wordpress.ts` (NETWORK_PATH_TO_TENANT).
+ * Multisite site path => brand key. Subdirectory Multisite, so every brand —
+ * AMC+ included — lives in its own subdirectory and the network's primary site
+ * at the root belongs to no brand: it maps to the `default` key, whose frontend
+ * renders the base tokens with no `[data-brand]` attribute. Mirrors the tenant
+ * mapping in `apps/web/lib/wordpress.ts` (NETWORK_PATH_TO_TENANT).
  */
 const MOSAIC_HEADLESS_SITE_PATHS = array(
-	'/'             => 'amcplus',
+	'/'             => 'default',
+	'/amcplus/'     => 'amcplus',
 	'/shudder/'     => 'shudder',
 	'/acorn/'       => 'acorn',
 	'/sundancenow/' => 'sundancenow',
@@ -55,6 +58,7 @@ const MOSAIC_HEADLESS_SITE_PATHS = array(
  * Unlisted brands keep their default.
  */
 const MOSAIC_HEADLESS_DEFAULT_ORIGINS = array(
+	'default'     => 'http://localhost:3001',
 	'amcplus'     => 'http://amcplus.localhost:3001',
 	'shudder'     => 'http://shudder.localhost:3001',
 	'acorn'       => 'http://acorn.localhost:3001',
@@ -106,7 +110,7 @@ function mosaic_headless_origins(): array {
 
 /** Frontend origin for the current tenant, or null if it isn't mapped. */
 function mosaic_headless_current_origin(): ?string {
-	$brand = 'amcplus';
+	$brand = 'default';
 
 	if ( is_multisite() ) {
 		$details = get_blog_details( get_current_blog_id() );

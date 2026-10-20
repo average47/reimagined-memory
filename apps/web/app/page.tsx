@@ -1,11 +1,15 @@
 import { cookies, draftMode, headers } from 'next/headers';
 import { MosaicContent } from '@/components/MosaicContent';
 import {
-  getPageBySlug,
   getPreviewById,
+  resolvePageBySlug,
   tenantForNetworkPath,
 } from '@/lib/wordpress';
-import type { PageContentNode, PreviewContent } from '@/lib/wordpress.types';
+import type {
+  PageContentNode,
+  PreviewContent,
+  Resolved,
+} from '@/lib/wordpress.types';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -99,14 +103,17 @@ export default async function SlugPage({ params }: Props) {
     );
   }
 
-  // ── Published: fetch by slug over GraphQL. ──
-  let data: PageContentNode | null = null;
+  // ── Published: fetch by slug over GraphQL, falling back to the shared
+  // library when this brand has nothing at the slug. ──
+  let resolved: Resolved<PageContentNode> | null = null;
   let error: string | null = null;
   try {
-    data = await getPageBySlug(tenant, slug);
+    resolved = await resolvePageBySlug(tenant, slug);
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
   }
+
+  const data: PageContentNode | null = resolved?.value ?? null;
 
   const content =
     typeof data?.content === 'string' && data.content.trim()
@@ -124,14 +131,15 @@ export default async function SlugPage({ params }: Props) {
         <pre className="m-5" style={errStyle}>
           Error fetching page data: {error}
         </pre>
-      ) : data ? (
+      ) : resolved ? (
         <pre className="m-5" style={preStyle}>
+          {`// source: ${resolved.source}${resolved.shared ? ' (shared library)' : ''}\n`}
           {JSON.stringify(data, null, 2)}
         </pre>
       ) : (
         <p>
           No content found for slug <code>{slug}</code> in tenant{' '}
-          <code>{tenant}</code>.
+          <code>{tenant}</code> or the shared library.
         </p>
       )}
     </>
