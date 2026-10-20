@@ -1,9 +1,13 @@
 import type {
   GraphQLResponse,
+  LibraryContentItem,
+  LibraryInfo,
+  LibraryMediaItem,
   MenuItemNode,
   MenuLocation,
   PageContentNode,
   PreviewContent,
+  Resolved,
   Tenant,
   TenantKey,
   WordPressPost,
@@ -19,9 +23,10 @@ const BASE_URL = (process.env.WORDPRESS_BASE_URL ?? 'http://localhost').replace(
   ''
 );
 
-/** The four tenants served by the WordPress Multisite network. */
+/** The tenants served by the WordPress Multisite network. */
 export const TENANTS: readonly Tenant[] = [
-  { key: 'main', label: 'AMC+', path: '' },
+  { key: 'main', label: 'Default (no brand)', path: '' },
+  { key: 'amcplus', label: 'AMC+', path: 'amcplus' },
   { key: 'shudder', label: 'Shudder', path: 'shudder' },
   { key: 'acorn', label: 'Acorn', path: 'acorn' },
   { key: 'sundancenow', label: 'Sundance Now', path: 'sundancenow' },
@@ -41,11 +46,13 @@ export function resolveTenantKey(value: string | undefined): TenantKey {
 
 /**
  * Map a site's `networkPath` (from middleware / siteConfigDomainMap) to a WP
- * tenant. AMC+ is the network's primary site ("main"); brands without a CMS
- * tenant (e.g. wetv) fall back to "main".
+ * tenant. Every brand has its own subdirectory tenant; the unbranded `default`
+ * site is the network's primary site ("main"), which is also the fallback for
+ * any networkPath without a tenant of its own.
  */
 const NETWORK_PATH_TO_TENANT: Record<string, TenantKey> = {
-  amcplus: 'main',
+  default: 'main',
+  amcplus: 'amcplus',
   shudder: 'shudder',
   acorn: 'acorn',
   sundancenow: 'sundancenow',
@@ -384,4 +391,176 @@ export async function getMenu(
     init
   );
   return data.menuItems.nodes;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared library                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The tenant that holds the shared library: content authored once and reused
+ * across microsites. It is the unbranded primary site, matching
+ * `mosaic_library_blog_id()` in `apps/cms/mu-plugins/shared-library.php`.
+ */
+export const LIBRARY_TENANT: TenantKey = 'main';
+
+/** Is this tenant the shared library itself? */
+export function isLibraryTenant(key: TenantKey): boolean {
+  return key === LIBRARY_TENANT;
+}
+
+/** Base URL of the library's `mosaic/v1` routes, served by every tenant. */
+function libraryEndpoint(key: TenantKey = LIBRARY_TENANT): string {
+  const { path } = getTenant(key);
+  const prefix = path ? `${BASE_URL}/${path}` : BASE_URL;
+  return `${prefix}/wp-json/mosaic/v1`;
+}
+
+/**
+ * Fetch JSON from a `mosaic/v1` route.
+ *
+ * @throws if the request fails.
+ */
+async function libraryFetch<T>(
+  route: string,
+  init: WpFetchInit = {}
+): Promise<T> {
+  const url = `${libraryEndpoint()}/${route}`;
+
+  const res = await fetch(url, {
+    headers: { ...init.headers },
+    next: { revalidate: 60 },
+    ...init,
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Shared library request to ${url} failed: ${res.status} ${res.statusText}`
+    );
+  }
+
+  return (await res.json()) as T;
+}
+
+/**
+ * Resolve a content node by slug with a shared-library fallback.
+ *
+ * A brand tenant's own content always wins; only when the brand has nothing at
+ * that slug does the library answer. That makes a library page visible on every
+ * microsite while still letting any brand shadow it by publishing its own page
+ * at the same slug.
+ *
+ * Returns null when neither the brand nor the library has the slug. Querying
+ * the library tenant itself does not double-fetch.
+ */
+export async function resolvePageBySlug(
+  tenant: TenantKey,
+  slug: string,
+  init?: WpFetchInit
+): Promise<Resolved<PageContentNode> | null> {
+  const own = await getPageBySlug(tenant, slug, init);
+  if (own) {
+    return { value: own, source: tenant, shared: isLibraryTenant(tenant) };
+  }
+
+  if (isLibraryTenant(tenant)) return null;
+
+  const shared = await getPageBySlug(LIBRARY_TENANT, slug, init);
+  return shared
+    ? { value: shared, source: LIBRARY_TENANT, shared: true }
+    : null;
+}
+
+/**
+ * Resolve a menu location with a shared-library fallback.
+ *
+ * Mirrors `resolvePageBySlug`: a brand's own menu wins, and the library's menu
+ * fills in when the brand hasn't assigned one — which is what lets a single
+ * footer be maintained once for every microsite. An empty menu counts as "not
+ * assigned", since that is how an unassigned location reads over WPGraphQL.
+ */
+export async function resolveMenu(
+  tenant: TenantKey,
+  location: MenuLocation,
+  init?: WpFetchInit
+): Promise<Resolved<MenuItemNode[]>> {
+  const own = await getMenu(tenant, location, init);
+  if (own.length > 0 || isLibraryTenant(tenant)) {
+    return { value: own, source: tenant, shared: isLibraryTenant(tenant) };
+  }
+
+  const shared = await getMenu(LIBRARY_TENANT, location, init);
+  return { value: shared, source: LIBRARY_TENANT, shared: true };
+}
+
+/** Which site backs the shared library. */
+export async function getLibraryInfo(
+  init?: WpFetchInit
+): Promise<LibraryInfo> {
+  return libraryFetch<LibraryInfo>('library', init);
+}
+
+/**
+ * Search the shared media library. Image attachments by default; pass a
+ * different `mime` prefix (e.g. `video`) to widen it.
+ */
+export async function getLibraryMedia(
+  options: {
+    search?: string;
+    perPage?: number;
+    page?: number;
+    mime?: string;
+  } = {},
+  init?: WpFetchInit
+): Promise<{ items: LibraryMediaItem[]; total: number; pages: number }> {
+  const params = new URLSearchParams({
+    per_page: String(options.perPage ?? 20),
+    page: String(options.page ?? 1),
+    mime: options.mime ?? 'image',
+  });
+  if (options.search) params.set('search', options.search);
+
+  return libraryFetch(`library/media?${params}`, init);
+}
+
+/** Search the shared library's pages/posts. */
+export async function getLibraryContent(
+  options: { search?: string; types?: string[]; perPage?: number } = {},
+  init?: WpFetchInit
+): Promise<{ items: LibraryContentItem[]; total: number }> {
+  const params = new URLSearchParams({
+    type: (options.types ?? ['page', 'post']).join(','),
+    per_page: String(options.perPage ?? 20),
+  });
+  if (options.search) params.set('search', options.search);
+
+  return libraryFetch(`library/content?${params}`, init);
+}
+
+/**
+ * Resolve the two footer layers for a tenant.
+ *
+ * Unlike `resolveMenu`, these do not contend: a subsite's footer is *additive*
+ * over the network-wide one. The `FOOTER` location means "this site's own
+ * footer menu", which on the library is the global footer and on a brand is
+ * that brand's local footer — so both layers come from one menu location
+ * without a second registration in the theme.
+ *
+ * `local` is empty on the library itself, whose own menu is already the global
+ * layer; returning it twice would render it above and below the copyright.
+ *
+ * A failure in either layer is contained: the other still renders.
+ */
+export async function resolveFooterMenus(
+  tenant: TenantKey,
+  init?: WpFetchInit
+): Promise<{ local: MenuItemNode[]; global: MenuItemNode[] }> {
+  const [local, global] = await Promise.all([
+    isLibraryTenant(tenant)
+      ? Promise.resolve<MenuItemNode[]>([])
+      : getMenu(tenant, 'FOOTER', init).catch(() => []),
+    getMenu(LIBRARY_TENANT, 'FOOTER', init).catch(() => []),
+  ]);
+
+  return { local, global };
 }

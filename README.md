@@ -53,8 +53,9 @@ subdomain:
   [Local dev proxy](#local-dev-proxy-brand-subdomains))
 - Component workbench — http://amcplus.localhost:3001/styleguide
 
-Opening http://localhost:3000 directly also works but defaults to the AMC+
-brand, since brand resolution relies on the `*.localhost` subdomains the proxy
+Opening http://localhost:3000 directly also works, but with no brand subdomain
+to resolve it renders the **unbranded default** site (base design tokens, no
+logo) — brand resolution relies on the `*.localhost` subdomains the proxy
 provides. The CMS is **not** started by `pnpm dev` — run it separately when you
 need WordPress-backed content (see [Headless CMS](#headless-cms-multi-tenant)).
 
@@ -113,7 +114,8 @@ proxy on `:3001`, Storybook on `:61000`). Then browse the app through the proxy:
 
 | URL                                      | Serves                                  |
 | ---------------------------------------- | --------------------------------------- |
-| http://amcplus.localhost:3001            | Next.js, themed as AMC+                  |
+| http://localhost:3001                    | Next.js, unbranded default              |
+| http://amcplus.localhost:3001            | Next.js, themed as AMC+                 |
 | http://shudder.localhost:3001            | Next.js, themed as Shudder              |
 | http://acorn.localhost:3001              | Next.js, themed as Acorn                |
 | http://sundancenow.localhost:3001        | Next.js, themed as Sundance Now         |
@@ -124,7 +126,9 @@ How it works ([apps/proxy/index.mjs](apps/proxy/index.mjs)):
 
 - Each `<brand>.localhost` is rewritten to the real brand hostname (e.g.
   `amcplus.com`) via the `Host` header, which the Next.js middleware uses to pick
-  the brand — so visiting the subdomain renders that tenant.
+  the brand — so visiting the subdomain renders that tenant. A host that isn't
+  mapped (including a bare `localhost`) forwards the `default` sentinel, which
+  resolves to the unbranded default site.
 - Requests to `/styleguide*` are routed to the Storybook app (`:61000`) instead
   of Next, with the `/styleguide` prefix stripped — Storybook's dev server has
   no `base` option and only serves from the root. The root-absolute URLs its
@@ -143,21 +147,29 @@ env vars. Run the proxy alone with `pnpm --filter proxy dev`.
 ## Headless CMS (multi-tenant)
 
 `apps/cms` runs a headless WordPress **Multisite** network in Docker (WordPress +
-MariaDB, WPGraphQL auto-installed) serving **five tenants**. Requires Docker and
-port 80.
+MariaDB, WPGraphQL auto-installed) serving **five brand tenants plus an
+unbranded default site**. Requires Docker and port 80.
 
 ```bash
 pnpm --filter cms up      # start the network at http://localhost
 pnpm --filter cms down    # stop it
 ```
 
-Tenants (subdirectory multisite): `/` (AMC+), `/shudder`, `/acorn`,
-`/sundancenow`, `/wetv` — each with its own `…/graphql` and `…/wp-json/wp/v2`
-endpoints.
+Tenants (subdirectory multisite): `/` (the unbranded default), `/amcplus`,
+`/shudder`, `/acorn`, `/sundancenow`, `/wetv` — each with its own `…/graphql`
+and `…/wp-json/wp/v2` endpoints.
+
+The unbranded primary site doubles as a **shared library**: its pages, posts,
+media, and menus are readable from every brand tenant, so brand-neutral content
+is authored once instead of duplicated per microsite. A brand's own content
+shadows the library's — except in the footer, where the two are additive: every
+subsite renders its own footer columns above the copyright and the library's
+network-wide links below it. See
+[Sharing data across microsites](apps/cms/README.md#sharing-data-across-microsites).
 
 The web app talks to it via [apps/web/lib/wordpress.ts](apps/web/lib/wordpress.ts)
 (set `WORDPRESS_BASE_URL`); the [/posts](apps/web/app/posts/page.tsx) page
-switches between all five tenants. See [apps/cms/README.md](apps/cms/README.md)
+switches between every tenant. See [apps/cms/README.md](apps/cms/README.md)
 for full details.
 
 ## MCP servers

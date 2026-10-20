@@ -13,6 +13,12 @@
     wp.blockEditor;
   const { PanelBody, TextControl, TextareaControl, Button } = wp.components;
 
+  // Shared-library media picker, registered by blocks/library-media.js and
+  // listed as a script dependency in blocks.php. Guarded so the editor still
+  // works if that script ever fails to load.
+  const SharedMediaButton = (window.mosaicLibrary || {}).SharedMediaButton;
+
+
   wp.blocks.registerBlockType('mosaic/hero', {
     apiVersion: 3,
     title: __('Hero'),
@@ -67,9 +73,16 @@
                 ),
             })
           ),
+          // Artwork uploaded to the shared library, reusable from every
+          // microsite without copying the file into this site's uploads.
+          SharedMediaButton
+            ? el(SharedMediaButton, {
+                onSelect: (url) => setAttributes({ [key]: url }),
+              })
+            : null,
           el(TextControl, {
             label: __(label),
-            help: __('Choose from the Media Library above, or paste a URL.'),
+            help: __('Choose from the Media Library or the shared library above, or paste a URL.'),
             value: attributes[key],
             onChange: (value) => setAttributes({ [key]: value }),
           })

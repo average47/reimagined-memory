@@ -1,5 +1,26 @@
 import type { ISiteConfig } from './typings';
 
+/**
+ * The unbranded default. Backs the WordPress network's primary site (tenant
+ * "main") and is what `getSiteConfig` returns for any host that isn't in the
+ * domain map below. Its route group sets no `[data-brand]`, so it renders the
+ * base design tokens from `app/colors.css` rather than a brand's overrides, and
+ * it ships no logo.
+ *
+ * `redirect` is where middleware sends an already-signed-in visitor. There is
+ * no unbranded watch app, so this points at the corporate site rather than any
+ * one brand's.
+ */
+export const defaultConfig: ISiteConfig = {
+  title: 'Mosaic',
+  logoRatio: '913/161',
+  logoMaxWidth: 200,
+  networkPath: 'default',
+  redirect: 'https://www.amcnetworks.com/',
+  loginPath: 'login',
+  signupPath: 'signup',
+};
+
 const acornConfig: ISiteConfig = {
   title: 'Acorn TV',
   logoRatio: '913/161',
@@ -66,6 +87,7 @@ const siteConfigDomainMap: Record<string, ISiteConfig> = {
 };
 
 export const siteConfigNetworkMap: Record<string, ISiteConfig> = {
+  default: defaultConfig,
   acorn: acornConfig,
   amcplus: amcplusConfig,
   shudder: shudderConfig,

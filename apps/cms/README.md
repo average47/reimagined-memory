@@ -1,8 +1,9 @@
 # cms — Headless, multi-tenant WordPress
 
 A headless WordPress **Multisite** network for the monorepo, run entirely in
-Docker. One install serves **five tenants** (sites); each serves content over its
-REST API and a GraphQL endpoint (via [WPGraphQL](https://www.wpgraphql.com/)).
+Docker. One install serves **five brand tenants plus an unbranded default site**;
+each serves content over its REST API and a GraphQL endpoint (via
+[WPGraphQL](https://www.wpgraphql.com/)).
 The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant frontend.
 
 ## Services
@@ -11,21 +12,210 @@ The Next.js app in `apps/web` consumes them as a decoupled, multi-tenant fronten
 | ----------- | ----------------------------- | ----------------------------------------------------------- |
 | `db`        | `mariadb:11.4`                | MySQL-compatible database (persisted volume)                |
 | `wordpress` | `wordpress:7.1.3-php8.3-apache` | WordPress backend, exposed on `WORDPRESS_PORT`              |
-| `wp-cli`    | `wordpress:cli-php8.3`        | One-shot init: core, multisite, 4 tenants, WPGraphQL, exits |
+| `wp-cli`    | `wordpress:cli-php8.3`        | One-shot init: core, multisite, 5 brand tenants, WPGraphQL, exits |
 
 ## Tenants
 
-Subdirectory Multisite — all five sites share one origin:
+Subdirectory Multisite — all six sites share one origin. Every brand lives in
+its own subdirectory; the network's **primary site at `/` belongs to no brand**
+and backs the unbranded default (see
+[The unbranded default site](#the-unbranded-default-site)):
 
-| Tenant       | URL                           | GraphQL                              |
-| ------------ | ----------------------------- | ------------------------------------ |
-| AMC+ (main)  | http://localhost/             | http://localhost/graphql             |
-| Shudder      | http://localhost/shudder/     | http://localhost/shudder/graphql     |
-| Acorn        | http://localhost/acorn/       | http://localhost/acorn/graphql       |
-| Sundance Now | http://localhost/sundancenow/ | http://localhost/sundancenow/graphql |
-| We TV        | http://localhost/wetv/        | http://localhost/wetv/graphql        |
+| Tenant             | URL                           | GraphQL                              |
+| ------------------ | ----------------------------- | ------------------------------------ |
+| Default (no brand) | http://localhost/             | http://localhost/graphql             |
+| AMC+               | http://localhost/amcplus/     | http://localhost/amcplus/graphql     |
+| Shudder            | http://localhost/shudder/     | http://localhost/shudder/graphql     |
+| Acorn              | http://localhost/acorn/       | http://localhost/acorn/graphql       |
+| Sundance Now       | http://localhost/sundancenow/ | http://localhost/sundancenow/graphql |
+| We TV              | http://localhost/wetv/        | http://localhost/wetv/graphql        |
 
 REST is likewise per-tenant, e.g. `http://localhost/shudder/wp-json/wp/v2`.
+
+### The unbranded default site
+
+The network's primary site (`blog_id` 1, path `/`) is deliberately **not** a
+brand. It is the fallback tenant: `apps/web` serves it for any host that isn't
+in its domain map — a bare `http://localhost:3001`, or an unrecognised
+subdomain — and renders it with **no `[data-brand]` attribute**, so it picks up
+the base design tokens in `apps/web/app/globals.css` instead of a brand's
+overrides. It ships no logo, so the header falls back to the site name as text.
+
+It is also the network's **shared library** — see
+[Sharing data across microsites](#sharing-data-across-microsites).
+
+The brand key for it is `default`, which is what the three mirrored mappings
+use:
+
+| Mapping | File |
+| --- | --- |
+| site path → brand (`'/' => 'default'`) | `mu-plugins/headless-permalinks.php` |
+| networkPath → tenant (`default: 'main'`) | `apps/web/lib/wordpress.ts` |
+| brand → site config (`default: defaultConfig`) | `apps/web/lib/siteConfigDomainMap.ts` |
+
+Adding or moving a tenant means updating all three in the same change.
+
+## Sharing data across microsites
+
+Brand tenants are separate WordPress sites with separate tables, so by default
+nothing crosses between them — a page, an image, or a menu made for one brand is
+invisible to the rest. The **shared library** fixes that for content that should
+exist once for the whole network.
+
+**The model is one canonical copy, not duplication.** The library is the
+unbranded primary site (`blog_id` 1, path `/`). Everything published there is
+shared; there is no per-item opt-in, because that site exists for nothing else.
+Brand tenants never hold a copy, so an edit in the library is live on every
+microsite at once.
+
+What is shared: **pages and posts**, the **media library**, and **menus**. The
+catalog post types (`movie`, `tv_series`, `tv_season`) are deliberately *not*
+shared — those stay per-brand.
+
+### Resolution: the brand always wins
+
+Reads fall back rather than merge. A brand's own content takes precedence, and
+the library only answers when the brand has nothing:
+
+```
+request /about on shudder
+  ├─ shudder has a page "about"?  ──yes──►  render shudder's
+  └─ no ──►  library has a page "about"?  ──yes──►  render the library's
+                                           └─ no ──►  404
+```
+
+That ordering is what makes the library safe to fill: a page maintained once
+appears on every brand, and any brand can shadow it by publishing its own page
+at the same slug. The `HEADER` menu location works the same way.
+
+**The footer is the exception: its two layers are additive, not competing.**
+Every subsite renders the network-wide footer *and* its own, so a brand adds to
+the global footer instead of replacing it:
+
+```
+┌─ local  — this subsite's own FOOTER menu      (top)
+├─ copyright                                    (middle)
+└─ global — the shared library's FOOTER menu    (bottom)
+```
+
+Both layers come from the same `FOOTER` location, so the theme needs no second
+registration: on the library that menu *is* the global footer, and on a brand it
+is that brand's local footer. `components/Footer.tsx` fetches both itself — it
+reads the `x-network-path` header and calls `getMenu` twice — so the layout
+passes it no props. The library site itself gets an empty `local` layer, since
+its own menu is already the global one and would otherwise render above and
+below the copyright.
+
+Both menus must be **assigned to the Footer location** in Appearance → Menus on
+their own site. Menus are only readable by location, so an unassigned menu reads
+as empty however many items it holds.
+
+The frontend helpers live in `apps/web/lib/wordpress.ts`:
+
+| Helper | Does | Used by |
+| --- | --- | --- |
+| `LIBRARY_TENANT` | The tenant that holds the library (`main`) | `Footer.tsx` |
+| `isLibraryTenant(key)` | Is this tenant the library? | `Footer.tsx` |
+| `resolvePageBySlug(tenant, slug)` | Brand content, else the library's | `app/page.tsx` |
+| `resolveMenu(tenant, location)` | Brand menu, else the library's (fallback) | — available |
+| `resolveFooterMenus(tenant)` | Both footer layers at once | — available |
+| `getLibraryMedia({ search })` | Search the shared media library | — available |
+| `getLibraryContent({ search })` | Search the library's pages/posts | — available |
+
+`resolvePageBySlug` returns a `Resolved<T>` — the value plus the `source` tenant
+and a `shared` flag — so a render can tell where its content came from.
+
+The helpers marked *available* have no caller today. `resolveMenu` is the
+fallback behaviour the `HEADER` location would want; `resolveFooterMenus`
+duplicates what `Footer.tsx` now does inline; and the editor's media picker
+calls the REST route below directly rather than going through
+`getLibraryMedia`.
+
+### Authoring a footer menu
+
+The two layers are authored differently, because they render in different
+places. Both are edited in Appearance → Menus on their own site.
+
+**A local menu is nested two levels: group → links.** Each top-level item is a
+column — the item itself is the column heading and its children are that
+column's links. Headings are not linked, so `#` is the conventional URL for
+them.
+
+```
+Follow AMC+        ← top-level item = column heading
+  ├─ Facebook      ← children = that column's links
+  ├─ Instagram
+  └─ X
+Need Help          ← next column
+  ├─ Browse Help Topics
+  └─ Contact Us
+```
+
+**A global menu is flat.** Every item is a link in the bottom bar; nesting it
+achieves nothing.
+
+Two rules worth knowing before authoring:
+
+- **Four columns maximum.** The grid depends on there being exactly six items,
+  so a local menu with more than four top-level groups is truncated rather than
+  allowed to add cells and push the spanning rows out of place (`COLUMN_COUNT`
+  in `components/Footer.tsx`). Fewer than four is fine — the remaining tracks
+  are simply empty.
+- **An all-icon group lays out as a row.** When *every* link in a column has
+  the "Use icon" box ticked, that column renders as a wrapping row of icons
+  instead of a stack — which is what makes a social column read correctly.
+  A mixed group stacks like any other.
+
+### How the footer renders
+
+Six grid items, mobile-first. The base grid is one column and each breakpoint
+only widens the track count; the last two items always span the full width,
+which is what collapses the row count:
+
+| Breakpoint | Grid | Rows | Layout |
+| --- | --- | --- | --- |
+| base | 1 column | 6 | every item on its own row |
+| `md` | 2 columns | 4 | columns 1-4 fill rows 1-2; items 5 and 6 span both |
+| `lg` | 4 columns | 3 | columns 1-4 fill row 1; items 5 and 6 span all four |
+
+Items 1-4 are the local menu's columns, item 5 is the copyright, and item 6 is
+the global menu — a list that stacks on mobile and becomes a wrapping horizontal
+row from `md` up.
+
+The "Use icon" option renders the sprite icon named after the **lowercased menu
+item label** (`Facebook` → `facebook`), with the label kept as the accessible
+name. A label with no matching symbol in `packages/ui/src/Icon/sprite.svg`
+renders as a blank space, so the label has to match a sprite id exactly.
+
+### The REST routes (`mosaic/v1`)
+
+`mu-plugins/shared-library.php` registers these on **every** tenant, so a brand
+site can reach the library without knowing where it lives. Each one reads the
+library via `switch_to_blog()` and returns only published items:
+
+| Route | Returns |
+| --- | --- |
+| `GET /wp-json/mosaic/v1/library` | Which site is the library (`blogId`, `url`, `isLibrary`) |
+| `GET /wp-json/mosaic/v1/library/media` | `?search=` `?per_page=` `?page=` `?mime=image` |
+| `GET /wp-json/mosaic/v1/library/content` | `?search=` `?type=page,post` `?per_page=` |
+| `GET /wp-json/mosaic/v1/library/menus` | Menus grouped by theme location |
+
+Move the library to a different site with the `MOSAIC_LIBRARY_BLOG_ID` env var
+on the `wordpress` service; `LIBRARY_TENANT` in `apps/web/lib/wordpress.ts` has
+to change to match.
+
+### Shared media in the block editor
+
+WordPress's own media modal only ever shows the *current* site's uploads, so
+`blocks/library-media.js` adds a **Shared library** button beside it wherever a
+block takes an image (the Card and Hero blocks today). It browses the library
+over `mosaic/v1/library/media` and writes the chosen absolute URL into the
+attribute — uploads are served from one origin, so a library URL resolves from
+every tenant with no copying.
+
+It is registered once as the `mosaic-library-media` script and listed as a
+dependency of every block editor script in `blocks.php`, so any new block can
+use `window.mosaicLibrary.SharedMediaButton` without further wiring.
 
 ## Quick start
 
@@ -36,12 +226,12 @@ docker compose logs -f wp-cli # watch first-run setup finish
 ```
 
 On first launch the `wp-cli` service installs WordPress core, converts it to a
-subdirectory Multisite network, creates the four additional tenant sites,
+subdirectory Multisite network, creates the five brand tenant sites,
 network-activates WPGraphQL, writes the multisite `.htaccess`, and flushes
 rewrites. It is idempotent — safe to leave in place across restarts.
 
 - **Admin:** http://localhost/wp-admin (default `admin` / `admin`) — the Network
-  Admin manages all five sites.
+  Admin manages all six sites.
 
 > **Port 80 is required.** Subdirectory Multisite stores the network domain
 > without a port, so WordPress's site lookups break on a custom port. If port 80
@@ -102,13 +292,14 @@ type and page hierarchy don't affect the URL.
 Each tenant maps to its own brand origin, defaulting to the local dev proxy
 (`apps/proxy`):
 
-| Tenant       | "View Page" target                             |
-| ------------ | ---------------------------------------------- |
-| AMC+ (main)  | http://amcplus.localhost:3001/&lt;slug&gt;     |
-| Shudder      | http://shudder.localhost:3001/&lt;slug&gt;     |
-| Acorn        | http://acorn.localhost:3001/&lt;slug&gt;       |
-| Sundance Now | http://sundancenow.localhost:3001/&lt;slug&gt; |
-| We TV        | http://wetv.localhost:3001/&lt;slug&gt;        |
+| Tenant             | "View Page" target                             |
+| ------------------ | ---------------------------------------------- |
+| Default (no brand) | http://localhost:3001/&lt;slug&gt;             |
+| AMC+               | http://amcplus.localhost:3001/&lt;slug&gt;     |
+| Shudder            | http://shudder.localhost:3001/&lt;slug&gt;     |
+| Acorn              | http://acorn.localhost:3001/&lt;slug&gt;       |
+| Sundance Now       | http://sundancenow.localhost:3001/&lt;slug&gt; |
+| We TV              | http://wetv.localhost:3001/&lt;slug&gt;        |
 
 Point it at deployed frontends with the `MOSAIC_FRONTEND_ORIGINS` env var — a
 comma-separated list of `brand=origin` pairs. Unlisted brands keep their
