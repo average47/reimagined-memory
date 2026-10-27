@@ -9,7 +9,7 @@ export type BrandCardsItem = Pick<
 
 /**
  * Brand Cards — from the Figma "BrandCards" component
- * (Marketing Platform · node 2227:1049): a centred headline, a row of `Card`s
+ * (Marketing Platform · handoff node 2314:195, component set 2227:1049): a centred headline, a row of `Card`s
  * and a primary CTA. Figma ships `Breakpoint=Mobile` (393px, 2×2 grid) and
  * `Breakpoint=Desktop` (1440px, single row) frames; they collapse into one
  * responsive component — Mobile is the base, Desktop is layered on with `lg:`.

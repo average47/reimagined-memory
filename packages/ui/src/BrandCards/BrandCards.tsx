@@ -6,7 +6,7 @@ import type { BrandCardsProps } from './BrandCards.types';
 
 /*
  * BrandCards — from the Figma "BrandCards" component (Marketing Platform,
- * node 2227:1049). Figma ships discrete Mobile (393px) and Desktop (1440px)
+ * "Brand Cards" handoff node 2314:195 → component set 2227:1049). Figma ships discrete Mobile (393px) and Desktop (1440px)
  * frames; per the repo's mobile-first rule this is one responsive component —
  * the Mobile frame is the unprefixed base and the Desktop frame is layered on
  * with `lg:`. There is no tablet frame, so no `md:` overrides.
