@@ -130,6 +130,47 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/BrandCards — headline + CTA strings, and `cards`: an
+		// array of objects, one per Card, each carrying the `mosaic/card` fields
+		// (attached contentType/contentId + display fields). Stored as an
+		// attribute rather than inner blocks because the frontend parser only
+		// reads empty placeholder divs.
+		'mosaic/brand-cards' => array(
+			'script'     => 'brand-cards',
+			'attributes' => array(
+				'title'    => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'cards'    => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array(
+						'type'       => 'object',
+						'properties' => array(
+							'contentType'   => array(
+								'type' => 'string',
+								'enum' => array( '', 'movie', 'tv_series' ),
+							),
+							'contentId'     => array( 'type' => 'integer' ),
+							'label'         => array( 'type' => 'string' ),
+							'imageSrc'      => array( 'type' => 'string' ),
+							'imageAlt'      => array( 'type' => 'string' ),
+							'backgroundSrc' => array( 'type' => 'string' ),
+							'href'          => array( 'type' => 'string' ),
+						),
+					),
+				),
+				'ctaLabel' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaHref'  => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
 		// packages/ui/src/Header — `siteName` is the brand name (string);
 		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
 		'mosaic/header' => array(
@@ -190,6 +231,10 @@ function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
 
+function mosaic_render_brand_cards( $attributes ) {
+	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
+}
+
 add_action(
 	'init',
 	function () {
@@ -198,6 +243,7 @@ add_action(
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
+			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {

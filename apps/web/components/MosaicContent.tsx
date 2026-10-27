@@ -1,5 +1,12 @@
 import { Fragment, type ReactElement } from 'react';
-import { Button, Card, Hero, type ButtonVariant } from '@repo/ui';
+import {
+  BrandCards,
+  Button,
+  Card,
+  Hero,
+  type BrandCardsItem,
+  type ButtonVariant,
+} from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
 /** Coerce an optional block attribute to a string, or undefined when absent/empty. */
@@ -18,6 +25,24 @@ function asVariant(value: unknown): ButtonVariant | undefined {
   return BUTTON_VARIANTS.includes(value as ButtonVariant)
     ? (value as ButtonVariant)
     : undefined;
+}
+
+/**
+ * Coerce the `mosaic/brand-cards` `cards` attribute to Card props. Each entry
+ * carries the same display fields as a `mosaic/card` block (the attached
+ * contentType/contentId only seed them in the editor).
+ */
+function asBrandCards(value: unknown): BrandCardsItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((card): card is Record<string, unknown> => !!card && typeof card === 'object')
+    .map((card) => ({
+      label: String(card.label ?? ''),
+      imageSrc: optionalString(card.imageSrc),
+      imageAlt: optionalString(card.imageAlt),
+      backgroundSrc: optionalString(card.backgroundSrc),
+      href: optionalString(card.href),
+    }));
 }
 
 /**
@@ -64,6 +89,15 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           imageAlt={optionalString(props.imageAlt)}
           backgroundSrc={optionalString(props.backgroundSrc)}
           href={optionalString(props.href)}
+        />
+      );
+    case 'mosaic/brand-cards':
+      return (
+        <BrandCards
+          title={String(props.title ?? '')}
+          cards={asBrandCards(props.cards)}
+          ctaLabel={optionalString(props.ctaLabel)}
+          ctaHref={optionalString(props.ctaHref)}
         />
       );
     default:
