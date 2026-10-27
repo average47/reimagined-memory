@@ -18,6 +18,13 @@ import type { HeroProps } from './Hero.types';
  * Differences from the raw Figma export: mobile centres content and uses a tall
  * top pad to drop the hero below the status/nav area, while desktop left-aligns
  * and vertically centres within a 572px min-height.
+ *
+ * The two frames group their layers differently (mobile nests legal with the
+ * copy, desktop nests the logo with it), so the wrappers below are arranged to
+ * reproduce both sets of gaps with one DOM: logo→copy 16/24px, copy→legal
+ * 20/24px, content→CTA 32px. Figma's body/medium (16/19) and body/xsmall
+ * (12/14) pair sizes with line-heights from other ramp steps, hence the
+ * `leading-(--text-N--line-height)` overrides.
  */
 export default function Hero({
   backgroundSrc,
@@ -50,37 +57,44 @@ export default function Hero({
         className="absolute inset-0 size-full object-cover"
       />
 
-      <div className="relative flex w-full flex-col items-center gap-8 lg:max-w-[511px] lg:items-start">
-        <img
-          src={logoSrc}
-          alt={logoAlt}
-          className="h-[54px] w-[307px] max-w-full object-contain object-center lg:object-left"
-        />
+      {/* Content column → CTA (32px at every breakpoint). */}
+      <div className="relative flex w-full max-w-[393px] flex-col items-center gap-7 lg:max-w-[511px] lg:items-start">
+        {/* Logo → copy. */}
+        <div className="flex w-full flex-col items-center gap-4 lg:items-start lg:gap-6">
+          <img
+            src={logoSrc}
+            alt={logoAlt}
+            className="h-[54px] w-[307px] max-w-full object-contain object-center lg:object-left"
+          />
 
-        <div className="flex w-full flex-col gap-5 text-center lg:text-left">
-          <div className="flex flex-col gap-3 lg:gap-4">
-            <h1 className="font-headline text-9 tracking-[-0.32px] text-text-secondary lg:text-11 lg:tracking-[-0.48px]">
-              {title}
-            </h1>
-            {description ? (
-              <p className="font-body text-4 text-text-tertiary lg:text-6">
-                {description}
+          {/* Copy → legal. */}
+          <div className="flex w-full flex-col items-center gap-5 lg:items-start lg:gap-6">
+            <div className="flex w-full flex-col gap-5 text-center lg:text-left">
+              <div className="flex flex-col gap-3 lg:gap-4">
+                <h1 className="font-headline text-9 tracking-[-0.32px] text-text-secondary lg:text-11 lg:tracking-[-0.48px]">
+                  {title}
+                </h1>
+                {description ? (
+                  <p className="font-body text-4 leading-(--text-3--line-height) text-text-tertiary lg:text-6 lg:leading-(--text-6--line-height)">
+                    {description}
+                  </p>
+                ) : null}
+              </div>
+
+              {priceText ? (
+                <p className="font-body text-4 leading-(--text-3--line-height) text-text-secondary lg:text-6 lg:leading-(--text-6--line-height)">
+                  {priceText}
+                </p>
+              ) : null}
+            </div>
+
+            {legal ? (
+              <p className="w-full max-w-[315px] text-center font-body text-2 leading-(--text-1--line-height) text-text-secondary lg:max-w-none lg:text-left lg:text-text-tertiary">
+                {legal}
               </p>
             ) : null}
           </div>
-
-          {priceText ? (
-            <p className="font-body text-4 text-text-secondary lg:text-6">
-              {priceText}
-            </p>
-          ) : null}
         </div>
-
-        {legal ? (
-          <p className="w-full max-w-[315px] text-center font-body text-2 leading-tight text-text-tertiary lg:max-w-none lg:text-left">
-            {legal}
-          </p>
-        ) : null}
 
         {ctaLabel ? (
           ctaHref ? (
