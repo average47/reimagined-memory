@@ -85,17 +85,6 @@ export async function Footer() {
       : getMenu(tenant, 'FOOTER').catch(() => [] as MenuItemNode[]),
   ]);
 
-  /* eslint-disable no-console -- deliberate diagnostic output */
-  console.log(
-    `[Footer] default site (global) footer menu — tenant "${LIBRARY_TENANT}", ${globalItems.length} items:\n`,
-    JSON.stringify(globalItems, null, 2)
-  );
-  console.log(
-    `[Footer] local site footer menu — tenant "${tenant}", ${localItems.length} items:\n`,
-    JSON.stringify(localItems, null, 2)
-  );
-  /* eslint-enable no-console */
-
   const year = new Date().getFullYear();
 
   // Each top-level group of the local menu is one column: the group is the

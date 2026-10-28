@@ -120,6 +120,10 @@ export default async function SlugPage({ params }: Props) {
       ? data.content
       : null;
 
+  // Diagnostics (fetch error / empty result) are a dev-only aid — never surface
+  // them to end users in a production build.
+  const isDev = process.env.NODE_ENV === 'development';
+
   return (
     <>
       <main>
@@ -127,21 +131,16 @@ export default async function SlugPage({ params }: Props) {
           components; everything else passes through as markup. */}
         {content ? <MosaicContent html={content} /> : null}
       </main>
-      {error ? (
+      {isDev && error ? (
         <pre className="m-5" style={errStyle}>
           Error fetching page data: {error}
         </pre>
-      ) : resolved ? (
-        <pre className="m-5" style={preStyle}>
-          {`// source: ${resolved.source}${resolved.shared ? ' (shared library)' : ''}\n`}
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      ) : (
+      ) : isDev && !content ? (
         <p>
           No content found for slug <code>{slug}</code> in tenant{' '}
           <code>{tenant}</code> or the shared library.
         </p>
-      )}
+      ) : null}
     </>
   );
 }
