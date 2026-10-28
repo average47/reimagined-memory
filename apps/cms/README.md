@@ -594,6 +594,7 @@ inserter.
 | `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
 | `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
+| `mosaic/brand-cards` | `BrandCards` | `title` (string), `ctaLabel`, `ctaHref` (strings), and `cards` — an array of card objects, each the same shape as a `mosaic/card` (`contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`)        |
 
 **Attaching a title to a card.** The `mosaic/card` editor has a per-card search
 field (`blocks/card-editor.js`), which queries the REST search
@@ -603,6 +604,14 @@ reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
 the entry, plus `backgroundSrc` from the title's artwork meta
 (`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
 frontend renders the card from those stored fields.
+
+**The `mosaic/brand-cards` section.** The `brand-cards` editor
+(`blocks/brand-cards-editor.js`) wraps a headline and CTA around a repeatable
+list of cards: use **Add card** to append a card and the per-card panel to
+attach a title (the same catalog search as `mosaic/card`), reorder, or remove
+it. Each card stores the same reference + display fields as the standalone card
+block; the `apps/web` frontend maps the stored `cards` array to the
+`BrandCards` component's `cards` prop.
 
 ## Menu item options
 

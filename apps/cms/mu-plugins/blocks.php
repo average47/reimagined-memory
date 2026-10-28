@@ -130,6 +130,32 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/BrandCards — a headline + CTA wrapping a repeatable list
+		// of cards. `cards` is an array of objects mirroring `BrandCardItem` plus
+		// each card's attached-content reference (contentType + contentId), same
+		// shape as the standalone `mosaic/card` block.
+		'mosaic/brand-cards' => array(
+			'script'     => 'brand-cards',
+			'attributes' => array(
+				'title'    => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'cards'    => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array( 'type' => 'object' ),
+				),
+				'ctaLabel' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaHref'  => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
 		// packages/ui/src/Header — `siteName` is the brand name (string);
 		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
 		'mosaic/header' => array(
@@ -190,6 +216,10 @@ function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
 
+function mosaic_render_brand_cards( $attributes ) {
+	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
+}
+
 add_action(
 	'init',
 	function () {
@@ -198,6 +228,7 @@ add_action(
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
+			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {
