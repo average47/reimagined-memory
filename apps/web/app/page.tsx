@@ -86,7 +86,7 @@ export default async function SlugPage({ params }: Props) {
       <>
         <PreviewBanner />
         {preview?.content ? <MosaicContent html={preview.content} /> : null}
-        <main
+        <div
           style={{ fontFamily: 'ui-monospace, monospace', padding: '2rem' }}
         >
           <h1>
@@ -98,7 +98,7 @@ export default async function SlugPage({ params }: Props) {
           ) : (
             <pre style={preStyle}>{JSON.stringify(preview, null, 2)}</pre>
           )}
-        </main>
+        </div>
       </>
     );
   }
@@ -126,11 +126,11 @@ export default async function SlugPage({ params }: Props) {
 
   return (
     <>
-      <main>
-        {/* Rendered content: Mosaic block placeholders become real @repo/ui
-          components; everything else passes through as markup. */}
-        {content ? <MosaicContent html={content} /> : null}
-      </main>
+      {/* Rendered content: Mosaic block placeholders become real @repo/ui
+          components; everything else passes through as markup. The <main>
+          landmark is provided once by the root layout, so this renders content
+          directly rather than nesting another <main>. */}
+      {content ? <MosaicContent html={content} /> : null}
       {isDev && error ? (
         <pre className="m-5" style={errStyle}>
           Error fetching page data: {error}

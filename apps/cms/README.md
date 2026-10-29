@@ -591,10 +591,11 @@ inserter.
 | Block                | Component    | Attributes                                                                                                                                                                                                                       |
 | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mosaic/button`      | `Button`     | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set)                                                                     |
-| `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
+| `mosaic/hero`        | `Hero`       | `backgroundSrc` (URL), `logo` (`mosaic` \| `amcplus` — a built-in brand lockup; overrides `logoSrc`), `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                |
 | `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
 | `mosaic/brand-cards` | `BrandCards` | `title` (string), `ctaLabel`, `ctaHref` (strings), and `cards` — an array of card objects, each the same shape as a `mosaic/card` (`contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`)        |
+| `mosaic/logo`        | `Logo`       | `brand` (`mosaic` \| `amcplus`, default `mosaic`) — which brand lockup to render                                                                                                                                                 |
 
 **Attaching a title to a card.** The `mosaic/card` editor has a per-card search
 field (`blocks/card-editor.js`), which queries the REST search

@@ -25,56 +25,26 @@ const inter = Inter({
 const endurancePro = localFont({
   src: [
     {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Light.woff2',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-LightItalic.woff2',
-      weight: '300',
-      style: 'italic',
-    },
-    {
       path: './sites/amcplus/EndurancePro/EndurancePro.woff2',
       weight: '400',
       style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Italic.woff2',
-      weight: '400',
-      style: 'italic',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-BoldItalic.woff2',
-      weight: '700',
-      style: 'italic',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Black.woff2',
-      weight: '900',
-      style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-BlackItalic.woff2',
-      weight: '900',
-      style: 'italic',
     },
   ],
   variable: '--font-endurance',
   display: 'swap',
 });
 
-// Endurance Pro's Black cut as its own family (normal weight), so "bold" text
-// can swap to this family instead of relying on weight-matching 700 → 900.
-const enduranceBlack = localFont({
+// Endurance Pro's Bold cut as its own family (registered at normal weight), so
+// "bold" text swaps to this family instead of relying on CSS weight-matching.
+const enduranceBold = localFont({
   src: [
     {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Black.woff2',
+      path: './sites/amcplus/EndurancePro/Endurance-Bold.woff',
       weight: '400',
       style: 'normal',
     },
   ],
-  variable: '--font-endurance-black',
+  variable: '--font-endurance-bold',
   display: 'swap',
 });
 
@@ -114,13 +84,22 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${endurancePro.variable} ${enduranceBlack.variable}`}
+      // Brand scope for the whole document (set by middleware via
+      // `x-network-path`). Hoisted to <html> so the [data-brand] token
+      // overrides in colors.css — including the Endurance Pro brand font —
+      // cover the header and footer too, not just the page <main>. The
+      // unbranded default site has no networkPath, so no attribute is set and
+      // the base tokens apply as-is.
+      data-brand={networkPath || undefined}
+      className={`${inter.variable} ${endurancePro.variable} ${enduranceBold.variable}`}
     >
-      <body className="flex min-h-screen flex-col bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-50">
+      <body className="flex min-h-screen flex-col bg-black text-gray-50 antialiased">
         <Header siteName={siteName} logoSrc={logoSrc} href="/" />
         {/* grow pushes the footer to the bottom of the viewport when the page
             content is short, while still letting it flow when content overflows. */}
-        <main className="grow">{children}</main>
+        <main className="mx-auto w-full max-w-7xl grow shadow-2xl shadow-border-default">
+          {children}
+        </main>
         {/* Fetches both footer layers itself (see components/Footer.tsx). */}
         <Footer />
       </body>

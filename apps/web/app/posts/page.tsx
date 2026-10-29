@@ -30,7 +30,7 @@ export default async function PostsPage({
   }
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-16">
+    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-16">
       <header className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Posts</h1>
         <nav className="flex flex-wrap gap-2">
@@ -79,6 +79,6 @@ export default async function PostsPage({
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

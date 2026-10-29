@@ -60,6 +60,13 @@ function mosaic_blocks() {
 					'type'    => 'string',
 					'default' => '',
 				),
+				// Brand lockup rendered via the Logo component; takes precedence
+				// over `logoSrc`. Empty string means "use the logoSrc image".
+				'logo' => array(
+					'type'    => 'string',
+					'enum'    => array( '', 'mosaic', 'amcplus' ),
+					'default' => '',
+				),
 				'logoSrc' => array(
 					'type'    => 'string',
 					'default' => '',
@@ -156,6 +163,18 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/Logo — a brand logo lockup. The only serializable prop
+		// is the `brand` variant (mosaic | amcplus).
+		'mosaic/logo' => array(
+			'script'     => 'logo',
+			'attributes' => array(
+				'brand' => array(
+					'type'    => 'string',
+					'enum'    => array( 'mosaic', 'amcplus' ),
+					'default' => 'mosaic',
+				),
+			),
+		),
 		// packages/ui/src/Header — `siteName` is the brand name (string);
 		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
 		'mosaic/header' => array(
@@ -216,6 +235,10 @@ function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
 
+function mosaic_render_logo( $attributes ) {
+	return mosaic_render_block( 'mosaic/logo', $attributes );
+}
+
 function mosaic_render_brand_cards( $attributes ) {
 	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
 }
@@ -229,6 +252,7 @@ add_action(
 			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
 			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
+			'mosaic/logo'        => 'mosaic_render_logo',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {

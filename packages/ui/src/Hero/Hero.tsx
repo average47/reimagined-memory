@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { cn } from '@repo/utils';
 import { Button } from '../Button';
+import { Logo } from '../Logo';
 import type { HeroProps } from './Hero.types';
 
 /*
@@ -21,6 +22,7 @@ import type { HeroProps } from './Hero.types';
  */
 export default function Hero({
   backgroundSrc,
+  logo,
   logoSrc,
   logoAlt = '',
   title,
@@ -51,11 +53,17 @@ export default function Hero({
       />
 
       <div className="relative flex w-full flex-col items-center gap-8 lg:max-w-[511px] lg:items-start">
-        <img
-          src={logoSrc}
-          alt={logoAlt}
-          className="h-[54px] w-[307px] max-w-full object-contain object-center lg:object-left"
-        />
+        {/* Prefer the brand lockup from the shared Logo component; fall back to
+            a custom image when only `logoSrc` is supplied. */}
+        {logo ? (
+          <Logo brand={logo} className="max-w-full" />
+        ) : logoSrc ? (
+          <img
+            src={logoSrc}
+            alt={logoAlt}
+            className="h-[54px] w-[307px] max-w-full object-contain object-center lg:object-left"
+          />
+        ) : null}
 
         <div className="flex w-full flex-col gap-5 text-center lg:text-left">
           <div className="flex flex-col gap-3 lg:gap-4">

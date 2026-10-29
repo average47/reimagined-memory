@@ -4,8 +4,10 @@ import {
   Button,
   Card,
   Hero,
+  Logo,
   type BrandCardItem,
   type ButtonVariant,
+  type LogoBrand,
 } from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
@@ -24,6 +26,14 @@ const BUTTON_VARIANTS: readonly ButtonVariant[] = [
 function asVariant(value: unknown): ButtonVariant | undefined {
   return BUTTON_VARIANTS.includes(value as ButtonVariant)
     ? (value as ButtonVariant)
+    : undefined;
+}
+
+const LOGO_BRANDS: readonly LogoBrand[] = ['mosaic', 'amcplus'];
+
+function asLogoBrand(value: unknown): LogoBrand | undefined {
+  return LOGO_BRANDS.includes(value as LogoBrand)
+    ? (value as LogoBrand)
     : undefined;
 }
 
@@ -51,7 +61,8 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
       return (
         <Hero
           backgroundSrc={String(props.backgroundSrc ?? '')}
-          logoSrc={String(props.logoSrc ?? '')}
+          logo={asLogoBrand(props.logo)}
+          logoSrc={optionalString(props.logoSrc)}
           logoAlt={optionalString(props.logoAlt)}
           title={String(props.title ?? '')}
           description={optionalString(props.description)}
@@ -94,6 +105,8 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           href={optionalString(props.href)}
         />
       );
+    case 'mosaic/logo':
+      return <Logo brand={asLogoBrand(props.brand)} />;
     default:
       // Unknown block (e.g. a component without a frontend mapping yet).
       return null;
