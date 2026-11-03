@@ -4,9 +4,11 @@
  * Plain JS against the bundled `wp.*` globals — no JSX, no build step.
  * Attributes mirror `packages/ui/src/BrandCards/BrandCards.types.ts`: a `title`
  * and CTA (`ctaLabel`/`ctaHref`) wrapping a repeatable `cards` array. Each card
- * is the same shape as the standalone `mosaic/card` block — a `movie`/`tv_series`
- * reference (`contentType` + `contentId`) plus the seeded, editable display
- * fields (`label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`).
+ * references a `movie`/`tv_series` (`contentType` + `contentId`); its link
+ * (`href`) and background art (`backgroundSrc`) come from that attached title
+ * and are NOT editable here. The editable display fields are the `label`
+ * (caption) and the logo image (`imageSrc`/`imageAlt`). `contentTitle` holds the
+ * attached title purely so the editor can label each card row.
  *
  * The real section UI is rendered by `apps/web`; `edit` only shows Inspector
  * controls + a placeholder, and `save` returns null (dynamic block).
@@ -37,6 +39,7 @@
   const emptyCard = () => ({
     contentType: '',
     contentId: 0,
+    contentTitle: '',
     label: '',
     imageSrc: '',
     imageAlt: '',
@@ -100,7 +103,9 @@
       set({
         contentType: subtype,
         contentId: id,
+        contentTitle: hit ? hit.title : card.contentTitle,
         label: hit ? hit.title : card.label,
+        // href comes from the attached title and is not editable in this block.
         href: hit ? hit.url : card.href,
       });
       const info = CONTENT[subtype];
@@ -155,22 +160,20 @@
     return el(
       PanelBody,
       {
-        title: (card.label || __('Card')) + ' — ' + (index + 1),
+        title: card.contentTitle || card.label || __('(no title selected)'),
         initialOpen: false,
       },
       el(ComboboxControl, {
         label: __('Movie / TV series'),
-        help: __('Search the catalog and pick a title to attach.'),
+        help: __('Search the catalog and pick a title to attach. Its link and background art come from the title.'),
         value: card.contentId ? String(card.contentId) : null,
         options: options,
         onFilterValueChange: search,
         onChange: select,
       }),
       field('label', 'Caption', 'Seeded from the attached title; edit to override.'),
-      field('href', 'Link URL', 'Leave empty to render the card without a link.'),
       mediaField('imageSrc', 'Logo image URL'),
       field('imageAlt', 'Logo alt text'),
-      mediaField('backgroundSrc', 'Background image URL'),
       el(
         'div',
         { style: { display: 'flex', gap: '8px', marginTop: '8px' } },
@@ -211,25 +214,37 @@
       const blockProps = useBlockProps();
       const cards = attributes.cards || [];
 
-      const updateCard = (index, patch) => {
-        const next = cards.slice();
-        next[index] = Object.assign({}, next[index], patch);
+      // Always merge into the LATEST cards, not this render's closure: selecting
+      // a title fires a synchronous update and then an async artwork fetch, and
+      // the async one must not clobber the fields set synchronously. The ref is
+      // written on every mutation so back-to-back updates compose.
+      const cardsRef = useRef(cards);
+      cardsRef.current = cards;
+
+      const commit = (next) => {
+        cardsRef.current = next;
         setAttributes({ cards: next });
       };
+      const updateCard = (index, patch) => {
+        const next = cardsRef.current.slice();
+        next[index] = Object.assign({}, next[index], patch);
+        commit(next);
+      };
       const removeCard = (index) => {
-        const next = cards.slice();
+        const next = cardsRef.current.slice();
         next.splice(index, 1);
-        setAttributes({ cards: next });
+        commit(next);
       };
       const moveCard = (index, delta) => {
         const target = index + delta;
-        if (target < 0 || target >= cards.length) return;
-        const next = cards.slice();
+        if (target < 0 || target >= cardsRef.current.length) return;
+        const next = cardsRef.current.slice();
         const [item] = next.splice(index, 1);
         next.splice(target, 0, item);
-        setAttributes({ cards: next });
+        commit(next);
       };
-      const addCard = () => setAttributes({ cards: cards.concat([emptyCard()]) });
+      const addCard = () =>
+        commit(cardsRef.current.concat([emptyCard()]));
 
       const field = (key, label, help) =>
         el(TextControl, {

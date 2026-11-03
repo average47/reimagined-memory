@@ -94,7 +94,7 @@ export async function Footer() {
   const columns = localChildrenOf(null).slice(0, COLUMN_COUNT);
 
   return (
-    <footer className="bg-gray-900 text-gray-50 p-7">
+    <footer className="bg-gray-900 text-gray-50 p-7 border-t border-gray-800">
       <ul className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Items 1-4 — the local menu's groups, one track each. */}
         {columns.map((group) => {

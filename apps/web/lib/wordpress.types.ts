@@ -133,3 +133,13 @@ export interface LibraryInfo {
   /** True when the queried tenant *is* the library. */
   isLibrary: boolean;
 }
+
+/**
+ * A tenant's WordPress Site Title (`blogname`) and Tagline (`blogdescription`),
+ * read from WPGraphQL `generalSettings`. Fields are null when unavailable so
+ * callers can fall back.
+ */
+export interface SiteMetadata {
+  title: string | null;
+  description: string | null;
+}

@@ -175,25 +175,6 @@ function mosaic_blocks() {
 				),
 			),
 		),
-		// packages/ui/src/Header — `siteName` is the brand name (string);
-		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
-		'mosaic/header' => array(
-			'script'     => 'header',
-			'attributes' => array(
-				'siteName' => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-				'logoSrc'  => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-				'href'     => array(
-					'type'    => 'string',
-					'default' => '',
-				),
-			),
-		),
 	);
 }
 
@@ -227,10 +208,6 @@ function mosaic_render_hero( $attributes ) {
 	return mosaic_render_block( 'mosaic/hero', $attributes );
 }
 
-function mosaic_render_header( $attributes ) {
-	return mosaic_render_block( 'mosaic/header', $attributes );
-}
-
 function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
@@ -249,7 +226,6 @@ add_action(
 		$renderers = array(
 			'mosaic/button' => 'mosaic_render_button',
 			'mosaic/hero'        => 'mosaic_render_hero',
-			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
 			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
 			'mosaic/logo'        => 'mosaic_render_logo',

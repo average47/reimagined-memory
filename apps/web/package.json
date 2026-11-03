@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-.certs/ca-bundle.pem} next dev",
+    "dev": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-.certs/ca-bundle.pem} next dev --turbopack",
     "build": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-.certs/ca-bundle.pem} next build",
     "start": "next start",
     "lint": "next lint",

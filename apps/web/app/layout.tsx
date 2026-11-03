@@ -2,14 +2,12 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
-import { Header } from '@repo/ui';
 import { Footer } from '@/components/Footer';
+import { Header } from '@/components/Header';
 import { siteConfigNetworkMap } from '@/lib/siteConfigDomainMap';
+import { SITE_DESCRIPTION } from '@/lib/metadata';
+import { getSiteMetadata, tenantForNetworkPath } from '@/lib/wordpress';
 import './globals.css';
-
-// Brands that ship a white wordmark at public/logos/<brand>/white.svg. Others
-// (e.g. acorn) have no asset yet and render the site name as text instead.
-const BRANDS_WITH_LOGO = new Set(['amcplus', 'shudder', 'sundancenow', 'wetv']);
 
 const inter = Inter({
   subsets: ['latin'],
@@ -53,9 +51,12 @@ const enduranceBold = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const networkPath = (await headers()).get('x-network-path') ?? '';
   const config = siteConfigNetworkMap[networkPath];
+  // Prefer the tenant's WordPress Site Title / Tagline (blogname /
+  // blogdescription); fall back to the static site config when unset.
+  const site = await getSiteMetadata(tenantForNetworkPath(networkPath));
   return {
-    title: config?.title ?? 'Reimagined Memory',
-    description: 'A Turborepo monorepo with Next.js, a UI library, and utils.',
+    title: site.title ?? config?.title ?? 'Reimagined Memory',
+    description: site.description ?? SITE_DESCRIPTION,
   };
 }
 
@@ -65,21 +66,6 @@ export default async function RootLayout({
   // The subsite being served, set by middleware. <Footer> reads the same
   // header itself to fetch its own menus.
   const networkPath = (await headers()).get('x-network-path');
-
-  // Brand wordmark for the header. The site config `title` is an SEO string
-  // (e.g. "AMC+ | Premium Streaming Service | …"), so take the part before the
-  // first "|" as the short name; fall back to the metadata default. It doubles
-  // as the logo's alt text.
-  const siteConfig = siteConfigNetworkMap[networkPath ?? ''];
-  const siteName =
-    siteConfig?.title.split('|')[0]?.trim() || 'Reimagined Memory';
-
-  // Brand logo lives at public/logos/<brand>/white.svg. Only the brands that
-  // ship one get a logo; the rest fall back to the site-name text in <Header>.
-  const logoSrc =
-    networkPath && BRANDS_WITH_LOGO.has(networkPath)
-      ? `/logos/${networkPath}/white.svg`
-      : undefined;
 
   return (
     <html
@@ -94,7 +80,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${endurancePro.variable} ${enduranceBold.variable}`}
     >
       <body className="flex min-h-screen flex-col bg-black text-gray-50 antialiased">
-        <Header siteName={siteName} logoSrc={logoSrc} href="/" />
+        <Header />
         {/* grow pushes the footer to the bottom of the viewport when the page
             content is short, while still letting it flow when content overflows. */}
         <main className="mx-auto w-full max-w-7xl grow shadow-2xl shadow-border-default">
