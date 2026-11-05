@@ -594,9 +594,12 @@ inserter.
 | `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
 | `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
+| `mosaic/brand-cards` | `BrandCards` | `title` (string), `cards` (array of objects with the same fields as `mosaic/card`: `contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel` (string; omit to hide the CTA), `ctaHref` (URL) |
 
 **Attaching a title to a card.** The `mosaic/card` editor has a per-card search
-field (`blocks/card-editor.js`), which queries the REST search
+field (`blocks/card-editor.js`), and `mosaic/brand-cards` has the same field on
+each of its cards (`blocks/brand-cards-editor.js`, where cards are also added,
+removed and reordered). Both query the REST search
 endpoint scoped to the `movie` and `tv_series` subtypes
 (`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
 reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
