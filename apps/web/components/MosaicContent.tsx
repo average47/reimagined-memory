@@ -38,12 +38,24 @@ function asLogoBrand(value: unknown): LogoBrand | undefined {
 }
 
 /**
+ * Pick the brand lockup for the site being served. The Logo component only
+ * ships the house `mosaic` mark and the `amcplus` lockup, so any other network
+ * (acorn, shudder, …) renders the house logo until it gets its own.
+ */
+function logoBrandForNetworkPath(networkPath: string | null): LogoBrand {
+  return networkPath === 'amcplus' ? 'amcplus' : 'mosaic';
+}
+
+/**
  * The switcher: map one `mosaic/*` block to the matching @repo/ui component,
  * passing its decoded attributes as props. Each case mirrors the component's
  * props 1:1; non-serializable props (event handlers) have no block attribute.
  * Add a case here when a new component's block ships (see apps/cms blocks.php).
  */
-function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
+function renderBlock(
+  { name, props }: MosaicBlockPart,
+  networkPath: string | null,
+): ReactElement | null {
   switch (name) {
     case 'mosaic/button': {
       const label = String(props.label ?? '');
@@ -61,7 +73,11 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
       return (
         <Hero
           backgroundSrc={String(props.backgroundSrc ?? '')}
-          logo={asLogoBrand(props.logo)}
+          // `showLogo` toggles the site's brand lockup; the specific brand is
+          // resolved from the networkPath the middleware set for this request.
+          logo={
+            props.showLogo ? logoBrandForNetworkPath(networkPath) : undefined
+          }
           logoSrc={optionalString(props.logoSrc)}
           logoAlt={optionalString(props.logoAlt)}
           title={String(props.title ?? '')}
@@ -117,14 +133,21 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
  * Render WordPress rendered-content HTML, swapping Mosaic block placeholders for
  * their React components and emitting the surrounding markup unchanged.
  */
-export function MosaicContent({ html }: { html: string }) {
+export function MosaicContent({
+  html,
+  networkPath = null,
+}: {
+  html: string;
+  /** Active site, set by middleware; used to resolve brand-aware props. */
+  networkPath?: string | null;
+}) {
   const parts = parseMosaicContent(html);
 
   return (
     <>
       {parts.map((part, index) =>
         part.type === 'block' ? (
-          <Fragment key={index}>{renderBlock(part)}</Fragment>
+          <Fragment key={index}>{renderBlock(part, networkPath)}</Fragment>
         ) : part.html.trim() ? (
           <div key={index} dangerouslySetInnerHTML={{ __html: part.html }} />
         ) : null

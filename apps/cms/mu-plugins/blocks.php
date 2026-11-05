@@ -60,12 +60,13 @@ function mosaic_blocks() {
 					'type'    => 'string',
 					'default' => '',
 				),
-				// Brand lockup rendered via the Logo component; takes precedence
-				// over `logoSrc`. Empty string means "use the logoSrc image".
-				'logo' => array(
-					'type'    => 'string',
-					'enum'    => array( '', 'mosaic', 'amcplus' ),
-					'default' => '',
+				// Whether to show this site's brand lockup via the Logo component.
+				// When true it takes precedence over `logoSrc`; the specific brand
+				// is resolved from the site's networkPath in apps/web. When false,
+				// fall back to the `logoSrc` image (if any).
+				'showLogo' => array(
+					'type'    => 'boolean',
+					'default' => false,
 				),
 				'logoSrc' => array(
 					'type'    => 'string',

@@ -85,7 +85,9 @@ export default async function SlugPage({ params }: Props) {
     return (
       <>
         <PreviewBanner />
-        {preview?.content ? <MosaicContent html={preview.content} /> : null}
+        {preview?.content ? (
+          <MosaicContent html={preview.content} networkPath={networkPath} />
+        ) : null}
         <div
           style={{ fontFamily: 'ui-monospace, monospace', padding: '2rem' }}
         >
@@ -130,7 +132,9 @@ export default async function SlugPage({ params }: Props) {
           components; everything else passes through as markup. The <main>
           landmark is provided once by the root layout, so this renders content
           directly rather than nesting another <main>. */}
-      {content ? <MosaicContent html={content} /> : null}
+      {content ? (
+        <MosaicContent html={content} networkPath={networkPath} />
+      ) : null}
       {isDev && error ? (
         <pre className="m-5" style={errStyle}>
           Error fetching page data: {error}

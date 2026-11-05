@@ -83,9 +83,7 @@ export default async function RootLayout({
         <Header />
         {/* grow pushes the footer to the bottom of the viewport when the page
             content is short, while still letting it flow when content overflows. */}
-        <main className="mx-auto w-full max-w-7xl grow shadow-2xl shadow-border-default">
-          {children}
-        </main>
+        <main className="mx-auto w-full max-w-7xl grow">{children}</main>
         {/* Fetches both footer layers itself (see components/Footer.tsx). */}
         <Footer />
       </body>

@@ -35,7 +35,7 @@ export default function BrandCards({
       className={cn(
         'flex flex-col items-center gap-[36px] bg-background-default px-4 py-8',
         'lg:gap-9 lg:py-9',
-        className,
+        className
       )}
       {...props}
     >
@@ -44,7 +44,7 @@ export default function BrandCards({
           {title}
         </h2>
 
-        <div className="flex w-full max-w-[358px] flex-wrap content-center items-center justify-center gap-3 lg:max-w-none lg:flex-nowrap lg:gap-4">
+        <div className="flex w-full max-w-[658px] flex-wrap content-center items-center justify-center gap-3 lg:max-w-none lg:flex-nowrap lg:gap-4">
           {cards.map((card, i) => (
             <Card key={card.href ?? `${card.label}-${i}`} {...card} />
           ))}

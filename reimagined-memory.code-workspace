@@ -24,6 +24,10 @@
       "name": "Utility Library",
       "path": "./packages/utils",
     },
+    {
+      "name": "Demo Slides",
+      "path": "./apps/hello",
+    },
   ],
   "settings": {
     "editor.formatOnSave": true,

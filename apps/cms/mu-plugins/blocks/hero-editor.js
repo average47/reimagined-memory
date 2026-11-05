@@ -11,7 +11,7 @@
   const { __ } = wp.i18n;
   const { InspectorControls, useBlockProps, MediaUpload, MediaUploadCheck } =
     wp.blockEditor;
-  const { PanelBody, TextControl, TextareaControl, SelectControl, Button } =
+  const { PanelBody, TextControl, TextareaControl, ToggleControl, Button } =
     wp.components;
 
   // Shared-library media picker, registered by blocks/library-media.js and
@@ -28,7 +28,7 @@
     icon: 'cover-image',
     attributes: {
       backgroundSrc: { type: 'string', default: '' },
-      logo: { type: 'string', enum: ['', 'mosaic', 'amcplus'], default: '' },
+      showLogo: { type: 'boolean', default: false },
       logoSrc: { type: 'string', default: '' },
       logoAlt: { type: 'string', default: '' },
       title: { type: 'string', default: '' },
@@ -110,16 +110,11 @@
             PanelBody,
             { title: __('Media'), initialOpen: false },
             mediaField('backgroundSrc', 'Background image URL'),
-            el(SelectControl, {
+            el(ToggleControl, {
               label: __('Brand logo'),
-              help: __('Use a built-in brand lockup. Overrides the logo image below.'),
-              value: attributes.logo,
-              options: [
-                { label: __('— None (use image) —'), value: '' },
-                { label: __('Mosaic'), value: 'mosaic' },
-                { label: __('AMC+'), value: 'amcplus' },
-              ],
-              onChange: (logo) => setAttributes({ logo }),
+              help: __("Show this site's brand logo (chosen automatically from the site). Overrides the logo image below."),
+              checked: attributes.showLogo,
+              onChange: (showLogo) => setAttributes({ showLogo }),
             }),
             mediaField('logoSrc', 'Logo image URL'),
             field(TextControl, 'logoAlt', 'Logo alt text')
