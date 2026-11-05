@@ -593,11 +593,12 @@ inserter.
 | `mosaic/button`      | `Button`     | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set)                                                                     |
 | `mosaic/hero`        | `Hero`       | `backgroundSrc` (URL), `logo` (`mosaic` \| `amcplus` — a built-in brand lockup; overrides `logoSrc`), `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
-| `mosaic/brand-cards` | `BrandCards` | `title` (string), `ctaLabel`, `ctaHref` (strings), and `cards` — an array of card objects (`contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`; plus `href`/`backgroundSrc` taken from the attached title, not editable here)       |
-| `mosaic/logo`        | `Logo`       | `brand` (`mosaic` \| `amcplus`, default `mosaic`) — which brand lockup to render                                                                                                                                                 |
+| `mosaic/brand-cards` | `BrandCards` | `title` (string), `cards` (array of objects with the same fields as `mosaic/card`: `contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel` (string; omit to hide the CTA), `ctaHref` (URL) |
 
 **Attaching a title to a card.** The `mosaic/card` editor has a per-card search
-field (`blocks/card-editor.js`), which queries the REST search
+field (`blocks/card-editor.js`), and `mosaic/brand-cards` has the same field on
+each of its cards (`blocks/brand-cards-editor.js`, where cards are also added,
+removed and reordered). Both query the REST search
 endpoint scoped to the `movie` and `tv_series` subtypes
 (`/wp/v2/search?subtype=movie,tv_series`). Selecting a result stores the
 reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from

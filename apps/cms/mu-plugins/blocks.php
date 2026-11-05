@@ -137,12 +137,50 @@ function mosaic_blocks() {
 				),
 			),
 		),
-		// packages/ui/src/BrandCards — a headline + CTA wrapping a repeatable list
-		// of cards. `cards` is an array of objects mirroring `BrandCardItem` plus
-		// each card's attached-content reference (contentType + contentId), same
-		// shape as the standalone `mosaic/card` block.
+		// packages/ui/src/BrandCards — `title`/`ctaLabel` are ReactNode props
+		// stored as strings. `cards` mirrors the `BrandCardsItem[]` prop: each
+		// item carries the same fields as `mosaic/card`, including the attached
+		// `movie`/`tv_series` reference (contentType + contentId).
 		'mosaic/brand-cards' => array(
 			'script'     => 'brand-cards',
+			'attributes' => array(
+				'title'    => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'cards'    => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array(
+						'type'       => 'object',
+						'properties' => array(
+							'contentType'   => array(
+								'type' => 'string',
+								'enum' => array( '', 'movie', 'tv_series' ),
+							),
+							'contentId'     => array( 'type' => 'integer' ),
+							'label'         => array( 'type' => 'string' ),
+							'imageSrc'      => array( 'type' => 'string' ),
+							'imageAlt'      => array( 'type' => 'string' ),
+							'backgroundSrc' => array( 'type' => 'string' ),
+							'href'          => array( 'type' => 'string' ),
+						),
+					),
+				),
+				'ctaLabel' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaHref'  => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+			),
+		),
+		// packages/ui/src/Header — `siteName` is the brand name (string);
+		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
+		'mosaic/header' => array(
+			'script'     => 'header',
 			'attributes' => array(
 				'title'    => array(
 					'type'    => 'string',
@@ -212,10 +250,6 @@ function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
 
-function mosaic_render_logo( $attributes ) {
-	return mosaic_render_block( 'mosaic/logo', $attributes );
-}
-
 function mosaic_render_brand_cards( $attributes ) {
 	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
 }
@@ -228,7 +262,6 @@ add_action(
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/card'        => 'mosaic_render_card',
 			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
-			'mosaic/logo'        => 'mosaic_render_logo',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {

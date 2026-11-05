@@ -2,21 +2,21 @@
  * Editor registration for `mosaic/brand-cards` (see ../blocks.php).
  *
  * Plain JS against the bundled `wp.*` globals — no JSX, no build step.
- * Attributes mirror `packages/ui/src/BrandCards/BrandCards.types.ts`: a `title`
- * and CTA (`ctaLabel`/`ctaHref`) wrapping a repeatable `cards` array. Each card
- * references a `movie`/`tv_series` (`contentType` + `contentId`); its link
- * (`href`) and background art (`backgroundSrc`) come from that attached title
- * and are NOT editable here. The editable display fields are the `label`
- * (caption) and the logo image (`imageSrc`/`imageAlt`). `contentTitle` holds the
- * attached title purely so the editor can label each card row.
+ * Attributes mirror `packages/ui/src/BrandCards/BrandCards.types.ts`: a
+ * headline, a CTA, and a `cards` array whose items carry the same fields as
+ * `mosaic/card` (including the attached `contentType` + `contentId`).
  *
- * The real section UI is rendered by `apps/web`; `edit` only shows Inspector
- * controls + a placeholder, and `save` returns null (dynamic block).
+ * Each card has its own search field, same as `mosaic/card`: typing queries the
+ * REST search endpoint scoped to the `movie`/`tv_series` subtypes; selecting a
+ * result stores the reference and seeds that card's `label`, `href` and
+ * `backgroundSrc`, which stay editable. Cards can be added, removed and
+ * reordered from the Inspector. The real UI is rendered by `apps/web`; `edit`
+ * only shows controls + a placeholder, and `save` returns null (dynamic block).
  */
 (function (wp) {
   const el = wp.element.createElement;
   const { useState, useRef } = wp.element;
-  const { __ } = wp.i18n;
+  const { __, sprintf } = wp.i18n;
   const { InspectorControls, useBlockProps, MediaUpload, MediaUploadCheck } =
     wp.blockEditor;
   const { PanelBody, TextControl, ComboboxControl, Button } = wp.components;
@@ -29,40 +29,70 @@
   const apiFetch = wp.apiFetch;
 
   // CPT subtype -> REST base + the meta key holding the artwork (imported from
-  // the schema feed as an object with a `contentUrl`). Used by the follow-up
-  // fetch that seeds a card background.
+  // the schema feed as an object with a `contentUrl`). Same as card-editor.js.
   const CONTENT = {
     movie: { base: 'movies', imageKey: '_movie_image' },
     tv_series: { base: 'tv-series', imageKey: '_tvseries_image' },
   };
 
-  const emptyCard = () => ({
+  const EMPTY_CARD = {
     contentType: '',
     contentId: 0,
-    contentTitle: '',
     label: '',
     imageSrc: '',
     imageAlt: '',
     backgroundSrc: '',
     href: '',
-  });
+  };
+
+  // Media field: pick from the WordPress Media Library or the shared library
+  // (writes the chosen URL), OR paste a URL into the text input.
+  function mediaField(value, label, onChange) {
+    return el(
+      'div',
+      { style: { marginBottom: '16px' } },
+      el(
+        MediaUploadCheck,
+        null,
+        el(MediaUpload, {
+          allowedTypes: ['image'],
+          onSelect: (media) => onChange(media.url),
+          render: ({ open }) =>
+            el(
+              Button,
+              { variant: 'secondary', onClick: open, style: { marginBottom: '8px' } },
+              value ? __('Replace image') : __('Select image')
+            ),
+        })
+      ),
+      SharedMediaButton ? el(SharedMediaButton, { onSelect: onChange }) : null,
+      el(TextControl, {
+        label: __(label),
+        help: __('Choose from the Media Library or the shared library above, or paste a URL.'),
+        value: value,
+        onChange: onChange,
+      })
+    );
+  }
 
   /**
-   * Inspector panel for a single card in the list. Defined once at module scope
-   * (stable identity) and rendered per item with a `key`, so its search hooks
-   * stay attached to the right row.
+   * Inspector fields for one card. A component (not a plain helper) so each
+   * card keeps its own search state.
    */
-  function CardRow(props) {
-    const { card, index, total, onChange, onRemove, onMove } = props;
-    const [options, setOptions] = useState(
-      card.contentId
-        ? [{ value: String(card.contentId), label: card.label || __('(selected)') }]
-        : []
-    );
+  function CardFields(props) {
+    const { card, index, count, onChange, onMove, onRemove } = props;
+    const [options, setOptions] = useState([]);
+    // Always include the current selection so the Combobox shows its label
+    // (also after a reorder hands this panel a different card).
+    const selected = card.contentId
+      ? { value: String(card.contentId), label: card.label || __('(selected)') }
+      : null;
+    const allOptions =
+      selected && !options.some((option) => option.value === selected.value)
+        ? [selected].concat(options)
+        : options;
     const timer = useRef(null);
     const results = useRef({}); // id -> { subtype, title, url }
-
-    const set = (patch) => onChange(index, patch);
 
     const search = (term) => {
       if (timer.current) clearTimeout(timer.current);
@@ -94,27 +124,28 @@
 
     const select = (value) => {
       if (!value) {
-        set({ contentType: '', contentId: 0 });
+        onChange({ contentType: '', contentId: 0 });
         return;
       }
       const id = parseInt(value, 10);
       const hit = results.current[id];
       const subtype = hit ? hit.subtype : card.contentType;
-      set({
+      // Store the reference and seed the caption/link from the search result.
+      onChange({
         contentType: subtype,
         contentId: id,
-        contentTitle: hit ? hit.title : card.contentTitle,
         label: hit ? hit.title : card.label,
-        // href comes from the attached title and is not editable in this block.
         href: hit ? hit.url : card.href,
       });
+      // Follow-up fetch for the artwork (stored in CPT meta) to seed the card
+      // background, when the subtype exposes an image.
       const info = CONTENT[subtype];
       if (info) {
         apiFetch({ path: '/wp/v2/' + info.base + '/' + id })
           .then((entry) => {
             const image = entry && entry.meta && entry.meta[info.imageKey];
             const url = image && image.contentUrl;
-            if (url) set({ backgroundSrc: url });
+            if (url) onChange({ backgroundSrc: url });
           })
           .catch(() => {});
       }
@@ -124,74 +155,42 @@
       el(TextControl, {
         label: __(label),
         help: help ? __(help) : undefined,
-        value: card[key],
-        onChange: (value) => set({ [key]: value }),
+        value: card[key] || '',
+        onChange: (value) => onChange({ [key]: value }),
       });
-
-    const mediaField = (key, label) =>
-      el(
-        'div',
-        { style: { marginBottom: '16px' } },
-        el(
-          MediaUploadCheck,
-          null,
-          el(MediaUpload, {
-            allowedTypes: ['image'],
-            onSelect: (media) => set({ [key]: media.url }),
-            render: ({ open }) =>
-              el(
-                Button,
-                { variant: 'secondary', onClick: open, style: { marginBottom: '8px' } },
-                card[key] ? __('Replace image') : __('Select image')
-              ),
-          })
-        ),
-        SharedMediaButton
-          ? el(SharedMediaButton, { onSelect: (url) => set({ [key]: url }) })
-          : null,
-        el(TextControl, {
-          label: __(label),
-          help: __('Choose from the Media Library or the shared library above, or paste a URL.'),
-          value: card[key],
-          onChange: (value) => set({ [key]: value }),
-        })
-      );
 
     return el(
       PanelBody,
       {
-        title: card.contentTitle || card.label || __('(no title selected)'),
+        /* translators: 1: card position, 2: card caption. */
+        title: sprintf(__('Card %1$d: %2$s'), index + 1, card.label || __('(untitled)')),
         initialOpen: false,
       },
       el(ComboboxControl, {
         label: __('Movie / TV series'),
-        help: __('Search the catalog and pick a title to attach. Its link and background art come from the title.'),
+        help: __('Search the catalog and pick a title to attach.'),
         value: card.contentId ? String(card.contentId) : null,
-        options: options,
+        options: allOptions,
         onFilterValueChange: search,
         onChange: select,
       }),
       field('label', 'Caption', 'Seeded from the attached title; edit to override.'),
-      mediaField('imageSrc', 'Logo image URL'),
+      field('href', 'Link URL', 'Leave empty to render the card without a link.'),
+      mediaField(card.imageSrc || '', 'Logo image URL', (url) => onChange({ imageSrc: url })),
       field('imageAlt', 'Logo alt text'),
+      mediaField(card.backgroundSrc || '', 'Background image URL', (url) =>
+        onChange({ backgroundSrc: url })
+      ),
       el(
         'div',
-        { style: { display: 'flex', gap: '8px', marginTop: '8px' } },
+        { style: { display: 'flex', gap: '8px' } },
+        el(Button, { variant: 'secondary', disabled: index === 0, onClick: () => onMove(-1) }, __('Move up')),
         el(
           Button,
-          { variant: 'tertiary', disabled: index === 0, onClick: () => onMove(index, -1) },
-          __('Move up')
-        ),
-        el(
-          Button,
-          { variant: 'tertiary', disabled: index === total - 1, onClick: () => onMove(index, 1) },
+          { variant: 'secondary', disabled: index === count - 1, onClick: () => onMove(1) },
           __('Move down')
         ),
-        el(
-          Button,
-          { isDestructive: true, variant: 'tertiary', onClick: () => onRemove(index) },
-          __('Remove')
-        )
+        el(Button, { variant: 'secondary', isDestructive: true, onClick: onRemove }, __('Remove'))
       )
     );
   }
@@ -199,12 +198,12 @@
   wp.blocks.registerBlockType('mosaic/brand-cards', {
     apiVersion: 3,
     title: __('Brand Cards'),
-    description: __('Headline, a grid of brand/service-category cards and a CTA, from the Mosaic design system.'),
+    description: __('Headline, a row of brand cards and a CTA from the Mosaic design system.'),
     category: 'design',
     icon: 'grid-view',
     attributes: {
       title: { type: 'string', default: '' },
-      cards: { type: 'array', default: [], items: { type: 'object' } },
+      cards: { type: 'array', default: [] },
       ctaLabel: { type: 'string', default: '' },
       ctaHref: { type: 'string', default: '' },
     },
@@ -213,38 +212,27 @@
       const { attributes, setAttributes } = props;
       const blockProps = useBlockProps();
       const cards = attributes.cards || [];
-
-      // Always merge into the LATEST cards, not this render's closure: selecting
-      // a title fires a synchronous update and then an async artwork fetch, and
-      // the async one must not clobber the fields set synchronously. The ref is
-      // written on every mutation so back-to-back updates compose.
+      // Latest cards for async updates (the artwork fetch resolves after the
+      // selection has already been saved, so the render-time array is stale).
       const cardsRef = useRef(cards);
       cardsRef.current = cards;
 
-      const commit = (next) => {
-        cardsRef.current = next;
+      const updateCard = (index, patch) =>
+        setAttributes({
+          cards: cardsRef.current.map((card, i) =>
+            i === index ? Object.assign({}, card, patch) : card
+          ),
+        });
+      const moveCard = (index, delta) => {
+        const next = cards.slice();
+        const [card] = next.splice(index, 1);
+        next.splice(index + delta, 0, card);
         setAttributes({ cards: next });
       };
-      const updateCard = (index, patch) => {
-        const next = cardsRef.current.slice();
-        next[index] = Object.assign({}, next[index], patch);
-        commit(next);
-      };
-      const removeCard = (index) => {
-        const next = cardsRef.current.slice();
-        next.splice(index, 1);
-        commit(next);
-      };
-      const moveCard = (index, delta) => {
-        const target = index + delta;
-        if (target < 0 || target >= cardsRef.current.length) return;
-        const next = cardsRef.current.slice();
-        const [item] = next.splice(index, 1);
-        next.splice(target, 0, item);
-        commit(next);
-      };
+      const removeCard = (index) =>
+        setAttributes({ cards: cards.filter((_, i) => i !== index) });
       const addCard = () =>
-        commit(cardsRef.current.concat([emptyCard()]));
+        setAttributes({ cards: cards.concat([Object.assign({}, EMPTY_CARD)]) });
 
       const field = (key, label, help) =>
         el(TextControl, {
@@ -262,30 +250,28 @@
           null,
           el(
             PanelBody,
-            { title: __('Section') },
+            { title: __('Content') },
             field('title', 'Headline'),
             field('ctaLabel', 'CTA label', 'Leave empty to hide the CTA.'),
-            field('ctaHref', 'CTA link URL', 'Leave empty to render a button instead of a link.')
+            field('ctaHref', 'CTA link URL')
+          ),
+          cards.map((card, index) =>
+            el(CardFields, {
+              // Keyed by position: keying on editable fields would remount
+              // (and collapse) the panel on every keystroke.
+              key: index,
+              card: card,
+              index: index,
+              count: cards.length,
+              onChange: (patch) => updateCard(index, patch),
+              onMove: (delta) => moveCard(index, delta),
+              onRemove: () => removeCard(index),
+            })
           ),
           el(
             PanelBody,
-            { title: __('Cards') },
-            cards.map((card, i) =>
-              el(CardRow, {
-                key: i,
-                card: card,
-                index: i,
-                total: cards.length,
-                onChange: updateCard,
-                onRemove: removeCard,
-                onMove: moveCard,
-              })
-            ),
-            el(
-              Button,
-              { variant: 'primary', onClick: addCard, style: { marginTop: '8px' } },
-              __('Add card')
-            )
+            { title: __('Cards'), initialOpen: cards.length === 0 },
+            el(Button, { variant: 'primary', onClick: addCard }, __('Add card'))
           )
         ),
         el(
@@ -298,25 +284,30 @@
               textAlign: 'center',
             },
           },
-          el(
-            'div',
-            { style: { fontSize: '11px', letterSpacing: '1px', opacity: 0.6, textTransform: 'uppercase' } },
-            __('Mosaic Brand Cards')
-          ),
+          el('div', { style: { fontSize: '11px', letterSpacing: '1px', opacity: 0.6, textTransform: 'uppercase' } }, __('Mosaic Brand Cards')),
           el(
             'div',
             { style: { fontSize: '20px', fontWeight: 700, marginTop: '6px', opacity: attributes.title ? 1 : 0.5 } },
-            attributes.title || __('(headline)')
+            attributes.title || __('(enter a headline)')
           ),
           el(
             'div',
-            { style: { marginTop: '8px', opacity: 0.6 } },
+            { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '12px' } },
             cards.length
-              ? cards.length + ' ' + (cards.length === 1 ? __('card') : __('cards'))
-              : __('(no cards yet — add one in the sidebar)')
+              ? cards.map((card, index) =>
+                  el(
+                    'div',
+                    {
+                      key: index,
+                      style: { padding: '8px 12px', border: '1px solid currentColor', borderRadius: '8px', opacity: 0.8 },
+                    },
+                    card.label || __('(untitled card)')
+                  )
+                )
+              : el('div', { style: { opacity: 0.5 } }, __('(add cards in the sidebar)'))
           ),
           attributes.ctaLabel
-            ? el('div', { style: { marginTop: '12px', opacity: 0.8 } }, '[ ' + attributes.ctaLabel + ' ]')
+            ? el('div', { style: { marginTop: '12px', fontWeight: 700 } }, attributes.ctaLabel)
             : null
         )
       );

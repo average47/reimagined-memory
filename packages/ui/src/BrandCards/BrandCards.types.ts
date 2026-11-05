@@ -2,31 +2,27 @@ import type { HTMLAttributes, ReactNode } from 'react';
 import type { CardProps } from '../Card';
 
 /**
- * A single category card in the grid — the presentational subset of `CardProps`
- * (the section drives a list of `Card`s, so event/DOM props don't apply here).
+ * One card in the BrandCards row — the serializable subset of `CardProps`
+ * (each item renders a shared `Card`).
  */
-export type BrandCardItem = Pick<
+export type BrandCardsItem = Pick<
   CardProps,
   'label' | 'imageSrc' | 'imageAlt' | 'backgroundSrc' | 'href'
 >;
 
 /**
- * BrandCards — from the Figma "BrandCards" section (Marketing Platform ·
- * node 2227:534 Desktop / 2227:1050 Mobile): a headline over a grid of brand /
- * service-category cards, with a primary CTA beneath.
- *
- * Figma ships discrete Mobile (393px) and Desktop (1440px) frames; they collapse
- * into one responsive component — the Mobile frame is the base and the Desktop
- * frame is layered on with Tailwind's `lg:` prefix (there is no tablet frame).
- * The cards and CTA reuse the shared `Card` and `Button`; all imagery and copy
- * is prop-supplied, so it stays dynamic.
+ * BrandCards — from the Figma "BrandCards" component (Marketing Platform ·
+ * node 2314:195): a centred headline over a row of brand/service `Card`s,
+ * followed by a CTA. Figma ships `Breakpoint=Mobile` (2×2 grid) and
+ * `Breakpoint=Desktop` (single row) variants; they collapse into one
+ * responsive component — Mobile is the base, Desktop is layered on with `lg:`.
  */
 export interface BrandCardsProps
   extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
-  /** Section headline, e.g. "Your Destination for Premium Entertainment". */
+  /** Headline copy, e.g. "Premium Entertainment Headline Goes Here". */
   title: ReactNode;
-  /** The cards to render in the grid (four in the design, but any count works). */
-  cards: BrandCardItem[];
+  /** The cards to show; they wrap two-up on mobile and sit in one row on desktop. */
+  cards: BrandCardsItem[];
   /** CTA label. Omit to hide the CTA. */
   ctaLabel?: ReactNode;
   /** CTA target; when set the CTA renders as a link. */
