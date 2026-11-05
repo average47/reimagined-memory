@@ -47,7 +47,7 @@ export default function Hero({
       className={cn(
         'relative flex flex-col items-center overflow-hidden px-4 pt-14 pb-6',
         'lg:min-h-[572px] lg:items-start lg:justify-center lg:px-13 lg:py-9',
-        className,
+        className
       )}
       {...props}
     >
@@ -72,22 +72,20 @@ export default function Hero({
           />
         ) : null}
 
-            {legal ? (
-              <p className="w-full max-w-[315px] text-center font-body text-2 leading-(--text-1--line-height) text-text-secondary lg:max-w-none lg:text-left lg:text-text-tertiary">
-                {legal}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        {ctaLabel ? (
-          ctaHref ? (
-            <Button label={ctaLabel} href={ctaHref} />
-          ) : (
-            <Button label={ctaLabel} />
-          )
+        {legal ? (
+          <p className="w-full max-w-[315px] text-center font-body text-2 leading-(--text-1--line-height) text-text-secondary lg:max-w-none lg:text-left lg:text-text-tertiary">
+            {legal}
+          </p>
         ) : null}
       </div>
+
+      {ctaLabel ? (
+        ctaHref ? (
+          <Button label={ctaLabel} href={ctaHref} />
+        ) : (
+          <Button label={ctaLabel} />
+        )
+      ) : null}
     </section>
   );
 }
