@@ -60,3 +60,16 @@ export const Default: Story = {
 
 /** Headline + CTA only (the Figma show* toggles map to omitted props). */
 export const Minimal: Story = {};
+
+/**
+ * Uses the shared `Logo` component for the brand lockup via the `logo` prop
+ * (takes precedence over `logoSrc`). Switch the brand in the Brand toolbar.
+ */
+export const BrandLogo: Story = {
+  args: {
+    logo: 'mosaic',
+    description:
+      'Award-winning originals, hit TV series, classic films and iconic franchises.',
+    priceText: 'Plans start at $6.99/month',
+  },
+};

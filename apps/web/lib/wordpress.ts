@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type {
   GraphQLResponse,
   LibraryContentItem,
@@ -8,6 +9,7 @@ import type {
   PageContentNode,
   PreviewContent,
   Resolved,
+  SiteMetadata,
   Tenant,
   TenantKey,
   WordPressPost,
@@ -183,6 +185,42 @@ export async function wpFetch<T>(
 
   return json.data;
 }
+
+const SITE_METADATA_QUERY = /* GraphQL */ `
+  query SiteMetadata {
+    generalSettings {
+      title
+      description
+    }
+  }
+`;
+
+interface SiteMetadataResult {
+  generalSettings: { title: string | null; description: string | null } | null;
+}
+
+/**
+ * A tenant's WordPress Site Title (`blogname`) and Tagline (`blogdescription`),
+ * from WPGraphQL `generalSettings`. Memoized per request with React `cache`, so
+ * `generateMetadata` and the header share a single round trip. Returns nulls on
+ * any failure (empty value or a CMS error) so page metadata never crashes.
+ */
+export const getSiteMetadata = cache(
+  async (tenant: TenantKey): Promise<SiteMetadata> => {
+    try {
+      const data = await wpFetch<SiteMetadataResult>(
+        tenant,
+        SITE_METADATA_QUERY
+      );
+      return {
+        title: data.generalSettings?.title?.trim() || null,
+        description: data.generalSettings?.description?.trim() || null,
+      };
+    } catch {
+      return { title: null, description: null };
+    }
+  }
+);
 
 const POSTS_QUERY = /* GraphQL */ `
   query LatestPosts($first: Int!) {

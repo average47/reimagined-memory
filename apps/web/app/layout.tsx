@@ -2,14 +2,12 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
-import { Header } from '@repo/ui';
 import { Footer } from '@/components/Footer';
+import { Header } from '@/components/Header';
 import { siteConfigNetworkMap } from '@/lib/siteConfigDomainMap';
+import { SITE_DESCRIPTION } from '@/lib/metadata';
+import { getSiteMetadata, tenantForNetworkPath } from '@/lib/wordpress';
 import './globals.css';
-
-// Brands that ship a white wordmark at public/logos/<brand>/white.svg. Others
-// (e.g. acorn) have no asset yet and render the site name as text instead.
-const BRANDS_WITH_LOGO = new Set(['amcplus', 'shudder', 'sundancenow', 'wetv']);
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,56 +23,26 @@ const inter = Inter({
 const endurancePro = localFont({
   src: [
     {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Light.woff2',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-LightItalic.woff2',
-      weight: '300',
-      style: 'italic',
-    },
-    {
       path: './sites/amcplus/EndurancePro/EndurancePro.woff2',
       weight: '400',
       style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Italic.woff2',
-      weight: '400',
-      style: 'italic',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-BoldItalic.woff2',
-      weight: '700',
-      style: 'italic',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Black.woff2',
-      weight: '900',
-      style: 'normal',
-    },
-    {
-      path: './sites/amcplus/EndurancePro/EndurancePro-BlackItalic.woff2',
-      weight: '900',
-      style: 'italic',
     },
   ],
   variable: '--font-endurance',
   display: 'swap',
 });
 
-// Endurance Pro's Black cut as its own family (normal weight), so "bold" text
-// can swap to this family instead of relying on weight-matching 700 → 900.
-const enduranceBlack = localFont({
+// Endurance Pro's Bold cut as its own family (registered at normal weight), so
+// "bold" text swaps to this family instead of relying on CSS weight-matching.
+const enduranceBold = localFont({
   src: [
     {
-      path: './sites/amcplus/EndurancePro/EndurancePro-Black.woff2',
+      path: './sites/amcplus/EndurancePro/Endurance-Bold.woff',
       weight: '400',
       style: 'normal',
     },
   ],
-  variable: '--font-endurance-black',
+  variable: '--font-endurance-bold',
   display: 'swap',
 });
 
@@ -83,9 +51,12 @@ const enduranceBlack = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const networkPath = (await headers()).get('x-network-path') ?? '';
   const config = siteConfigNetworkMap[networkPath];
+  // Prefer the tenant's WordPress Site Title / Tagline (blogname /
+  // blogdescription); fall back to the static site config when unset.
+  const site = await getSiteMetadata(tenantForNetworkPath(networkPath));
   return {
-    title: config?.title ?? 'Reimagined Memory',
-    description: 'A Turborepo monorepo with Next.js, a UI library, and utils.',
+    title: site.title ?? config?.title ?? 'Reimagined Memory',
+    description: site.description ?? SITE_DESCRIPTION,
   };
 }
 
@@ -96,31 +67,25 @@ export default async function RootLayout({
   // header itself to fetch its own menus.
   const networkPath = (await headers()).get('x-network-path');
 
-  // Brand wordmark for the header. The site config `title` is an SEO string
-  // (e.g. "AMC+ | Premium Streaming Service | …"), so take the part before the
-  // first "|" as the short name; fall back to the metadata default. It doubles
-  // as the logo's alt text.
-  const siteConfig = siteConfigNetworkMap[networkPath ?? ''];
-  const siteName =
-    siteConfig?.title.split('|')[0]?.trim() || 'Reimagined Memory';
-
-  // Brand logo lives at public/logos/<brand>/white.svg. Only the brands that
-  // ship one get a logo; the rest fall back to the site-name text in <Header>.
-  const logoSrc =
-    networkPath && BRANDS_WITH_LOGO.has(networkPath)
-      ? `/logos/${networkPath}/white.svg`
-      : undefined;
-
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${endurancePro.variable} ${enduranceBlack.variable}`}
+      // Brand scope for the whole document (set by middleware via
+      // `x-network-path`). Hoisted to <html> so the [data-brand] token
+      // overrides in colors.css — including the Endurance Pro brand font —
+      // cover the header and footer too, not just the page <main>. The
+      // unbranded default site has no networkPath, so no attribute is set and
+      // the base tokens apply as-is.
+      data-brand={networkPath || undefined}
+      className={`${inter.variable} ${endurancePro.variable} ${enduranceBold.variable}`}
     >
-      <body className="flex min-h-screen flex-col bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-50">
-        <Header siteName={siteName} logoSrc={logoSrc} href="/" />
+      <body className="flex min-h-screen flex-col bg-black text-gray-50 antialiased">
+        <Header />
         {/* grow pushes the footer to the bottom of the viewport when the page
             content is short, while still letting it flow when content overflows. */}
-        <main className="grow">{children}</main>
+        <main className="mx-auto w-full max-w-7xl grow shadow-2xl shadow-border-default">
+          {children}
+        </main>
         {/* Fetches both footer layers itself (see components/Footer.tsx). */}
         <Footer />
       </body>

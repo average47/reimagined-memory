@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
+import type { LogoBrand } from '../Logo';
 
 /**
  * Marketing hero — from the Figma "Hero" component
@@ -12,9 +13,14 @@ import type { HTMLAttributes, ReactNode } from 'react';
 export interface HeroProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
   /** Full-bleed background image URL (prop-supplied content, kept dynamic). */
   backgroundSrc: string;
-  /** Brand logo image URL. */
-  logoSrc: string;
-  /** Accessible name for the logo. */
+  /**
+   * Brand lockup to render via the shared `Logo` component. When set it takes
+   * precedence over `logoSrc`; omit it to fall back to a custom `logoSrc` image.
+   */
+  logo?: LogoBrand;
+  /** Custom logo image URL. Used when `logo` is not set. */
+  logoSrc?: string;
+  /** Accessible name for the `logoSrc` image. */
   logoAlt?: string;
   /** Headline copy. */
   title: ReactNode;

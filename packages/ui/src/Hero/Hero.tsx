@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { cn } from '@repo/utils';
 import { Button } from '../Button';
+import { Logo } from '../Logo';
 import type { HeroProps } from './Hero.types';
 
 /*
@@ -28,6 +29,7 @@ import type { HeroProps } from './Hero.types';
  */
 export default function Hero({
   backgroundSrc,
+  logo,
   logoSrc,
   logoAlt = '',
   title,
@@ -57,36 +59,18 @@ export default function Hero({
         className="absolute inset-0 size-full object-cover"
       />
 
-      {/* Content column → CTA (32px at every breakpoint). */}
-      <div className="relative flex w-full max-w-[393px] flex-col items-center gap-7 lg:max-w-[511px] lg:items-start">
-        {/* Logo → copy. */}
-        <div className="flex w-full flex-col items-center gap-4 lg:items-start lg:gap-6">
+      <div className="relative flex w-full flex-col items-center gap-8 lg:max-w-[511px] lg:items-start">
+        {/* Prefer the brand lockup from the shared Logo component; fall back to
+            a custom image when only `logoSrc` is supplied. */}
+        {logo ? (
+          <Logo brand={logo} className="max-w-full" />
+        ) : logoSrc ? (
           <img
             src={logoSrc}
             alt={logoAlt}
             className="h-[54px] w-[307px] max-w-full object-contain object-center lg:object-left"
           />
-
-          {/* Copy → legal. */}
-          <div className="flex w-full flex-col items-center gap-5 lg:items-start lg:gap-6">
-            <div className="flex w-full flex-col gap-5 text-center lg:text-left">
-              <div className="flex flex-col gap-3 lg:gap-4">
-                <h1 className="font-headline text-9 tracking-[-0.32px] text-text-secondary lg:text-11 lg:tracking-[-0.48px]">
-                  {title}
-                </h1>
-                {description ? (
-                  <p className="font-body text-4 leading-(--text-3--line-height) text-text-tertiary lg:text-6 lg:leading-(--text-6--line-height)">
-                    {description}
-                  </p>
-                ) : null}
-              </div>
-
-              {priceText ? (
-                <p className="font-body text-4 leading-(--text-3--line-height) text-text-secondary lg:text-6 lg:leading-(--text-6--line-height)">
-                  {priceText}
-                </p>
-              ) : null}
-            </div>
+        ) : null}
 
             {legal ? (
               <p className="w-full max-w-[315px] text-center font-body text-2 leading-(--text-1--line-height) text-text-secondary lg:max-w-none lg:text-left lg:text-text-tertiary">

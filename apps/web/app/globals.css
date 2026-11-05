@@ -37,13 +37,14 @@
   --color-status-success: #30d158;
 
   /*
-   * Font families. All roles resolve to the --brand-font primitive
-   * (colors.css), which defaults to Inter and switches to Endurance Pro under
-   * [data-brand='amcplus']. Every role shares one family per the Figma tokens.
+   * Font families. Roles resolve to the --brand-font primitive (colors.css),
+   * which defaults to Inter and switches to Endurance Pro under
+   * [data-brand='amcplus']. CTAs use the brand's bold family (--brand-font-bold)
+   * so buttons/links render bold without a separate `font-bold` utility.
    */
   --font-headline: var(--brand-font);
   --font-body: var(--brand-font);
-  --font-cta: var(--brand-font);
+  --font-cta: var(--brand-font-bold);
   --font-badge: var(--brand-font);
 
   /* Font weights. Bold resolves to the brand's bold weight (400 when the brand

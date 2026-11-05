@@ -60,6 +60,13 @@ function mosaic_blocks() {
 					'type'    => 'string',
 					'default' => '',
 				),
+				// Brand lockup rendered via the Logo component; takes precedence
+				// over `logoSrc`. Empty string means "use the logoSrc image".
+				'logo' => array(
+					'type'    => 'string',
+					'enum'    => array( '', 'mosaic', 'amcplus' ),
+					'default' => '',
+				),
 				'logoSrc' => array(
 					'type'    => 'string',
 					'default' => '',
@@ -175,17 +182,34 @@ function mosaic_blocks() {
 		'mosaic/header' => array(
 			'script'     => 'header',
 			'attributes' => array(
-				'siteName' => array(
+				'title'    => array(
 					'type'    => 'string',
 					'default' => '',
 				),
-				'logoSrc'  => array(
+				'cards'    => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array( 'type' => 'object' ),
+				),
+				'ctaLabel' => array(
 					'type'    => 'string',
 					'default' => '',
 				),
-				'href'     => array(
+				'ctaHref'  => array(
 					'type'    => 'string',
 					'default' => '',
+				),
+			),
+		),
+		// packages/ui/src/Logo — a brand logo lockup. The only serializable prop
+		// is the `brand` variant (mosaic | amcplus).
+		'mosaic/logo' => array(
+			'script'     => 'logo',
+			'attributes' => array(
+				'brand' => array(
+					'type'    => 'string',
+					'enum'    => array( 'mosaic', 'amcplus' ),
+					'default' => 'mosaic',
 				),
 			),
 		),
@@ -222,10 +246,6 @@ function mosaic_render_hero( $attributes ) {
 	return mosaic_render_block( 'mosaic/hero', $attributes );
 }
 
-function mosaic_render_header( $attributes ) {
-	return mosaic_render_block( 'mosaic/header', $attributes );
-}
-
 function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
@@ -240,7 +260,6 @@ add_action(
 		$renderers = array(
 			'mosaic/button' => 'mosaic_render_button',
 			'mosaic/hero'        => 'mosaic_render_hero',
-			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
 			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
 		);

@@ -591,8 +591,7 @@ inserter.
 | Block                | Component    | Attributes                                                                                                                                                                                                                       |
 | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mosaic/button`      | `Button`     | `label` (string), `variant` (`primary` \| `secondary` \| `tertiary`, default `primary`), `icon` (sprite name, e.g. `play`), `href` (renders a link when set)                                                                     |
-| `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
-| `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
+| `mosaic/hero`        | `Hero`       | `backgroundSrc` (URL), `logo` (`mosaic` \| `amcplus` — a built-in brand lockup; overrides `logoSrc`), `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
 | `mosaic/brand-cards` | `BrandCards` | `title` (string), `cards` (array of objects with the same fields as `mosaic/card`: `contentType`, `contentId`, `label`, `imageSrc`, `imageAlt`, `backgroundSrc`, `href`), `ctaLabel` (string; omit to hide the CTA), `ctaHref` (URL) |
 
@@ -606,6 +605,17 @@ reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
 the entry, plus `backgroundSrc` from the title's artwork meta
 (`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
 frontend renders the card from those stored fields.
+
+**The `mosaic/brand-cards` section.** The `brand-cards` editor
+(`blocks/brand-cards-editor.js`) wraps a headline and CTA around a repeatable
+list of cards: use **Add card** to append a card and the per-card panel to
+attach a title (the same catalog search as `mosaic/card`), reorder, or remove
+it. Each card panel is labelled with its attached title. Unlike the standalone
+`mosaic/card`, the card's link (`href`) and background art (`backgroundSrc`)
+are taken from the attached title and are **not** editable here — only the
+caption (`label`) and logo image (`imageSrc`/`imageAlt`) are. The `apps/web`
+frontend maps the stored `cards` array to the `BrandCards` component's `cards`
+prop.
 
 ## Menu item options
 
