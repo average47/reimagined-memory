@@ -11,7 +11,8 @@
   const { __ } = wp.i18n;
   const { InspectorControls, useBlockProps, MediaUpload, MediaUploadCheck } =
     wp.blockEditor;
-  const { PanelBody, TextControl, TextareaControl, Button } = wp.components;
+  const { PanelBody, TextControl, TextareaControl, SelectControl, Button } =
+    wp.components;
 
   // Shared-library media picker, registered by blocks/library-media.js and
   // listed as a script dependency in blocks.php. Guarded so the editor still
@@ -27,6 +28,7 @@
     icon: 'cover-image',
     attributes: {
       backgroundSrc: { type: 'string', default: '' },
+      logo: { type: 'string', enum: ['', 'mosaic', 'amcplus'], default: '' },
       logoSrc: { type: 'string', default: '' },
       logoAlt: { type: 'string', default: '' },
       title: { type: 'string', default: '' },
@@ -108,6 +110,17 @@
             PanelBody,
             { title: __('Media'), initialOpen: false },
             mediaField('backgroundSrc', 'Background image URL'),
+            el(SelectControl, {
+              label: __('Brand logo'),
+              help: __('Use a built-in brand lockup. Overrides the logo image below.'),
+              value: attributes.logo,
+              options: [
+                { label: __('— None (use image) —'), value: '' },
+                { label: __('Mosaic'), value: 'mosaic' },
+                { label: __('AMC+'), value: 'amcplus' },
+              ],
+              onChange: (logo) => setAttributes({ logo }),
+            }),
             mediaField('logoSrc', 'Logo image URL'),
             field(TextControl, 'logoAlt', 'Logo alt text')
           )

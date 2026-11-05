@@ -85,17 +85,6 @@ export async function Footer() {
       : getMenu(tenant, 'FOOTER').catch(() => [] as MenuItemNode[]),
   ]);
 
-  /* eslint-disable no-console -- deliberate diagnostic output */
-  console.log(
-    `[Footer] default site (global) footer menu — tenant "${LIBRARY_TENANT}", ${globalItems.length} items:\n`,
-    JSON.stringify(globalItems, null, 2)
-  );
-  console.log(
-    `[Footer] local site footer menu — tenant "${tenant}", ${localItems.length} items:\n`,
-    JSON.stringify(localItems, null, 2)
-  );
-  /* eslint-enable no-console */
-
   const year = new Date().getFullYear();
 
   // Each top-level group of the local menu is one column: the group is the
@@ -105,7 +94,7 @@ export async function Footer() {
   const columns = localChildrenOf(null).slice(0, COLUMN_COUNT);
 
   return (
-    <footer className="bg-gray-900 text-gray-50 p-7">
+    <footer className="bg-gray-900 text-gray-50 p-7 border-t border-gray-800">
       <ul className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Items 1-4 — the local menu's groups, one track each. */}
         {columns.map((group) => {

@@ -1,5 +1,14 @@
 import { Fragment, type ReactElement } from 'react';
-import { Button, Card, Hero, type ButtonVariant } from '@repo/ui';
+import {
+  BrandCards,
+  Button,
+  Card,
+  Hero,
+  Logo,
+  type BrandCardItem,
+  type ButtonVariant,
+  type LogoBrand,
+} from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
 /** Coerce an optional block attribute to a string, or undefined when absent/empty. */
@@ -17,6 +26,14 @@ const BUTTON_VARIANTS: readonly ButtonVariant[] = [
 function asVariant(value: unknown): ButtonVariant | undefined {
   return BUTTON_VARIANTS.includes(value as ButtonVariant)
     ? (value as ButtonVariant)
+    : undefined;
+}
+
+const LOGO_BRANDS: readonly LogoBrand[] = ['mosaic', 'amcplus'];
+
+function asLogoBrand(value: unknown): LogoBrand | undefined {
+  return LOGO_BRANDS.includes(value as LogoBrand)
+    ? (value as LogoBrand)
     : undefined;
 }
 
@@ -44,7 +61,8 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
       return (
         <Hero
           backgroundSrc={String(props.backgroundSrc ?? '')}
-          logoSrc={String(props.logoSrc ?? '')}
+          logo={asLogoBrand(props.logo)}
+          logoSrc={optionalString(props.logoSrc)}
           logoAlt={optionalString(props.logoAlt)}
           title={String(props.title ?? '')}
           description={optionalString(props.description)}
@@ -54,6 +72,27 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           ctaHref={optionalString(props.ctaHref)}
         />
       );
+    case 'mosaic/brand-cards': {
+      // Each card's attached movie/tv_series seeds its display fields in the
+      // editor; render from them, same as the standalone card block.
+      const cards: BrandCardItem[] = Array.isArray(props.cards)
+        ? (props.cards as Record<string, unknown>[]).map((card) => ({
+            label: String(card.label ?? ''),
+            imageSrc: optionalString(card.imageSrc),
+            imageAlt: optionalString(card.imageAlt),
+            backgroundSrc: optionalString(card.backgroundSrc),
+            href: optionalString(card.href),
+          }))
+        : [];
+      return (
+        <BrandCards
+          title={String(props.title ?? '')}
+          cards={cards}
+          ctaLabel={optionalString(props.ctaLabel)}
+          ctaHref={optionalString(props.ctaHref)}
+        />
+      );
+    }
     case 'mosaic/card':
       // The attached movie/tv_series seeds these display fields in the editor;
       // render from them.
@@ -66,6 +105,8 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           href={optionalString(props.href)}
         />
       );
+    case 'mosaic/logo':
+      return <Logo brand={asLogoBrand(props.brand)} />;
     default:
       // Unknown block (e.g. a component without a frontend mapping yet).
       return null;

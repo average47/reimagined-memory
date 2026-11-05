@@ -86,7 +86,7 @@ export default async function SlugPage({ params }: Props) {
       <>
         <PreviewBanner />
         {preview?.content ? <MosaicContent html={preview.content} /> : null}
-        <main
+        <div
           style={{ fontFamily: 'ui-monospace, monospace', padding: '2rem' }}
         >
           <h1>
@@ -98,7 +98,7 @@ export default async function SlugPage({ params }: Props) {
           ) : (
             <pre style={preStyle}>{JSON.stringify(preview, null, 2)}</pre>
           )}
-        </main>
+        </div>
       </>
     );
   }
@@ -120,28 +120,27 @@ export default async function SlugPage({ params }: Props) {
       ? data.content
       : null;
 
+  // Diagnostics (fetch error / empty result) are a dev-only aid — never surface
+  // them to end users in a production build.
+  const isDev = process.env.NODE_ENV === 'development';
+
   return (
     <>
-      <main>
-        {/* Rendered content: Mosaic block placeholders become real @repo/ui
-          components; everything else passes through as markup. */}
-        {content ? <MosaicContent html={content} /> : null}
-      </main>
-      {error ? (
+      {/* Rendered content: Mosaic block placeholders become real @repo/ui
+          components; everything else passes through as markup. The <main>
+          landmark is provided once by the root layout, so this renders content
+          directly rather than nesting another <main>. */}
+      {content ? <MosaicContent html={content} /> : null}
+      {isDev && error ? (
         <pre className="m-5" style={errStyle}>
           Error fetching page data: {error}
         </pre>
-      ) : resolved ? (
-        <pre className="m-5" style={preStyle}>
-          {`// source: ${resolved.source}${resolved.shared ? ' (shared library)' : ''}\n`}
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      ) : (
+      ) : isDev && !content ? (
         <p>
           No content found for slug <code>{slug}</code> in tenant{' '}
           <code>{tenant}</code> or the shared library.
         </p>
-      )}
+      ) : null}
     </>
   );
 }

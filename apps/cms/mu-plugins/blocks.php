@@ -60,6 +60,13 @@ function mosaic_blocks() {
 					'type'    => 'string',
 					'default' => '',
 				),
+				// Brand lockup rendered via the Logo component; takes precedence
+				// over `logoSrc`. Empty string means "use the logoSrc image".
+				'logo' => array(
+					'type'    => 'string',
+					'enum'    => array( '', 'mosaic', 'amcplus' ),
+					'default' => '',
+				),
 				'logoSrc' => array(
 					'type'    => 'string',
 					'default' => '',
@@ -130,22 +137,41 @@ function mosaic_blocks() {
 				),
 			),
 		),
-		// packages/ui/src/Header — `siteName` is the brand name (string);
-		// `logoSrc` is the logo image URL; `href` optionally links the wordmark home.
-		'mosaic/header' => array(
-			'script'     => 'header',
+		// packages/ui/src/BrandCards — a headline + CTA wrapping a repeatable list
+		// of cards. `cards` is an array of objects mirroring `BrandCardItem` plus
+		// each card's attached-content reference (contentType + contentId), same
+		// shape as the standalone `mosaic/card` block.
+		'mosaic/brand-cards' => array(
+			'script'     => 'brand-cards',
 			'attributes' => array(
-				'siteName' => array(
+				'title'    => array(
 					'type'    => 'string',
 					'default' => '',
 				),
-				'logoSrc'  => array(
+				'cards'    => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array( 'type' => 'object' ),
+				),
+				'ctaLabel' => array(
 					'type'    => 'string',
 					'default' => '',
 				),
-				'href'     => array(
+				'ctaHref'  => array(
 					'type'    => 'string',
 					'default' => '',
+				),
+			),
+		),
+		// packages/ui/src/Logo — a brand logo lockup. The only serializable prop
+		// is the `brand` variant (mosaic | amcplus).
+		'mosaic/logo' => array(
+			'script'     => 'logo',
+			'attributes' => array(
+				'brand' => array(
+					'type'    => 'string',
+					'enum'    => array( 'mosaic', 'amcplus' ),
+					'default' => 'mosaic',
 				),
 			),
 		),
@@ -182,12 +208,16 @@ function mosaic_render_hero( $attributes ) {
 	return mosaic_render_block( 'mosaic/hero', $attributes );
 }
 
-function mosaic_render_header( $attributes ) {
-	return mosaic_render_block( 'mosaic/header', $attributes );
-}
-
 function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
+}
+
+function mosaic_render_logo( $attributes ) {
+	return mosaic_render_block( 'mosaic/logo', $attributes );
+}
+
+function mosaic_render_brand_cards( $attributes ) {
+	return mosaic_render_block( 'mosaic/brand-cards', $attributes );
 }
 
 add_action(
@@ -196,8 +226,9 @@ add_action(
 		$renderers = array(
 			'mosaic/button' => 'mosaic_render_button',
 			'mosaic/hero'        => 'mosaic_render_hero',
-			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
+			'mosaic/brand-cards' => 'mosaic_render_brand_cards',
+			'mosaic/logo'        => 'mosaic_render_logo',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {
