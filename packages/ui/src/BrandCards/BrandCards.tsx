@@ -20,7 +20,8 @@ import type { BrandCardsProps } from './BrandCards.types';
  * no spacing token (the scale jumps 32→40), and the headline widths (358/406px)
  * come straight from the frames, so those use arbitrary values. Figma's
  * headline/4 (24/24) pairs a text-7 size with the text-6 line-height, hence the
- * `leading-(--text-6--line-height)` override.
+ * `leading-(--text-6--line-height)` override; it has to be reset at `lg` so
+ * headline/3 gets text-9's own 32px line-height back.
  */
 export default function BrandCards({
   title,
@@ -42,7 +43,7 @@ export default function BrandCards({
     >
       {/* Headline → cards. */}
       <div className="flex w-full flex-col items-center gap-6 lg:gap-[36px]">
-        <h2 className="w-full max-w-[358px] text-center font-headline font-regular text-7 leading-(--text-6--line-height) tracking-[-0.24px] text-text-secondary lg:max-w-[406px] lg:text-9 lg:tracking-[-0.32px]">
+        <h2 className="w-full max-w-[358px] text-center font-headline font-regular text-7 leading-(--text-6--line-height) tracking-[-0.24px] text-text-secondary lg:max-w-[406px] lg:text-9 lg:leading-(--text-9--line-height) lg:tracking-[-0.32px]">
           {title}
         </h2>
 
