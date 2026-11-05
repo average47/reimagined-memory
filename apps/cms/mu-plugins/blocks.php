@@ -149,6 +149,56 @@ function mosaic_blocks() {
 				),
 			),
 		),
+		// packages/ui/src/CollectionSwimlane — ReactNode text props stored as
+		// strings. Each `items` entry attaches a `movie`/`tv_series`
+		// (contentType + contentId) and carries the poster's display fields
+		// (title, imageSrc, href) seeded from it.
+		'mosaic/collection-swimlane' => array(
+			'script'     => 'collection-swimlane',
+			'attributes' => array(
+				'backgroundSrc' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'title'         => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'description'   => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaLabel'      => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'ctaHref'       => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'swimlaneTitle' => array(
+					'type'    => 'string',
+					'default' => '',
+				),
+				'items'         => array(
+					'type'    => 'array',
+					'default' => array(),
+					'items'   => array(
+						'type'       => 'object',
+						'properties' => array(
+							'contentType' => array(
+								'type' => 'string',
+								'enum' => array( '', 'movie', 'tv_series' ),
+							),
+							'contentId'   => array( 'type' => 'integer' ),
+							'title'       => array( 'type' => 'string' ),
+							'imageSrc'    => array( 'type' => 'string' ),
+							'href'        => array( 'type' => 'string' ),
+						),
+					),
+				),
+			),
+		),
 	);
 }
 
@@ -190,6 +240,10 @@ function mosaic_render_card( $attributes ) {
 	return mosaic_render_block( 'mosaic/card', $attributes );
 }
 
+function mosaic_render_collection_swimlane( $attributes ) {
+	return mosaic_render_block( 'mosaic/collection-swimlane', $attributes );
+}
+
 add_action(
 	'init',
 	function () {
@@ -198,6 +252,7 @@ add_action(
 			'mosaic/hero'        => 'mosaic_render_hero',
 			'mosaic/header'      => 'mosaic_render_header',
 			'mosaic/card'        => 'mosaic_render_card',
+			'mosaic/collection-swimlane' => 'mosaic_render_collection_swimlane',
 		);
 
 		foreach ( mosaic_blocks() as $name => $block ) {

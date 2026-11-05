@@ -1,5 +1,12 @@
 import { Fragment, type ReactElement } from 'react';
-import { Button, Card, Hero, type ButtonVariant } from '@repo/ui';
+import {
+  Button,
+  Card,
+  CollectionSwimlane,
+  Hero,
+  type ButtonVariant,
+  type CollectionSwimlaneItem,
+} from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
 /** Coerce an optional block attribute to a string, or undefined when absent/empty. */
@@ -18,6 +25,28 @@ function asVariant(value: unknown): ButtonVariant | undefined {
   return BUTTON_VARIANTS.includes(value as ButtonVariant)
     ? (value as ButtonVariant)
     : undefined;
+}
+
+/**
+ * Coerce the swimlane's `items` attribute to poster props, dropping entries
+ * without artwork. The attached `contentType`/`contentId` seed these display
+ * fields in the editor; render from them.
+ */
+function asSwimlaneItems(value: unknown): CollectionSwimlaneItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry: unknown) => {
+    if (!entry || typeof entry !== 'object') return [];
+    const item = entry as Record<string, unknown>;
+    const imageSrc = optionalString(item.imageSrc);
+    if (!imageSrc) return [];
+    return [
+      {
+        title: String(item.title ?? ''),
+        imageSrc,
+        href: optionalString(item.href),
+      },
+    ];
+  });
 }
 
 /**
@@ -64,6 +93,18 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           imageAlt={optionalString(props.imageAlt)}
           backgroundSrc={optionalString(props.backgroundSrc)}
           href={optionalString(props.href)}
+        />
+      );
+    case 'mosaic/collection-swimlane':
+      return (
+        <CollectionSwimlane
+          backgroundSrc={optionalString(props.backgroundSrc)}
+          title={String(props.title ?? '')}
+          description={optionalString(props.description)}
+          ctaLabel={optionalString(props.ctaLabel)}
+          ctaHref={optionalString(props.ctaHref)}
+          swimlaneTitle={optionalString(props.swimlaneTitle)}
+          items={asSwimlaneItems(props.items)}
         />
       );
     default:

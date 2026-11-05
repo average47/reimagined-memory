@@ -594,6 +594,7 @@ inserter.
 | `mosaic/hero`        | `Hero`       | `backgroundSrc`, `logoSrc`, `logoAlt`, `title`, `description`, `priceText`, `legal`, `ctaLabel`, `ctaHref` (all strings/URLs)                                                                                                    |
 | `mosaic/header`      | `Header`     | `siteName` (string), `logoSrc` (URL), `href` (link target)                                                                                                                                                                       |
 | `mosaic/card`        | `Card`       | `contentType` (`movie` \| `tv_series`), `contentId` (integer) — the attached title — plus `label` (string), `imageSrc`, `imageAlt`, `backgroundSrc`, `href` (strings/URLs; seeded from the attached title, editable to override) |
+| `mosaic/collection-swimlane` | `CollectionSwimlane` | `backgroundSrc`, `title`, `description`, `ctaLabel`, `ctaHref`, `swimlaneTitle` (all strings/URLs), plus `items` — an ordered array of posters, each with `contentType` (`movie` \| `tv_series`), `contentId` (integer), `title`, `imageSrc`, `href` (the attached title plus display fields seeded from it, editable to override) |
 
 **Attaching a title to a card.** The `mosaic/card` editor has a per-card search
 field (`blocks/card-editor.js`), which queries the REST search
@@ -603,6 +604,12 @@ reference (`contentType`/`contentId`) and seeds the card's `label`/`href` from
 the entry, plus `backgroundSrc` from the title's artwork meta
 (`_movie_image`/`_tvseries_image` `contentUrl`) when present. The `apps/web`
 frontend renders the card from those stored fields.
+
+The `mosaic/collection-swimlane` editor (`blocks/collection-swimlane-editor.js`)
+gives every poster in `items` the same search field: add, reorder or remove
+posters from the Inspector, and selecting a result stores that poster's
+`contentType`/`contentId` and seeds its `title`/`href` plus `imageSrc` from the
+artwork meta. The poster `title` doubles as the image's alt text.
 
 ## Menu item options
 
