@@ -29,13 +29,12 @@ const meta = {
   },
   args: {
     backgroundSrc: bg,
-    logoSrc: logo,
-    logoAlt: 'Mosaic',
     title: 'Exceptional Stories. Unforgettable Drama.',
     ctaLabel: 'Start Free Trial',
     ctaHref: '#start',
   },
   argTypes: {
+    logo: { control: 'select', options: ['mosaic', 'amcplus'] },
     description: { control: 'text' },
     priceText: { control: 'text' },
     legal: { control: 'text' },
@@ -48,9 +47,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Full hero. Resize past `lg` (1024px) to see the desktop layout. */
+/**
+ * Full hero as in the Figma handoff, with the shared `Logo` lockup. Resize past
+ * `lg` (1024px) to see the desktop layout; switch brands in the Brand toolbar.
+ */
 export const Default: Story = {
   args: {
+    logo: 'mosaic',
     description:
       'Award-winning originals, hit TV series, classic films and iconic franchises, all on AMC+.',
     priceText: 'Plans start at $6.99/month',
@@ -61,15 +64,22 @@ export const Default: Story = {
 /** Headline + CTA only (the Figma show* toggles map to omitted props). */
 export const Minimal: Story = {};
 
-/**
- * Uses the shared `Logo` component for the brand lockup via the `logo` prop
- * (takes precedence over `logoSrc`). Switch the brand in the Brand toolbar.
- */
-export const BrandLogo: Story = {
+/** A custom logo image via `logoSrc`, used when no `logo` lockup is set. */
+export const CustomLogoImage: Story = {
   args: {
-    logo: 'mosaic',
+    logoSrc: logo,
+    logoAlt: 'Mosaic',
     description:
       'Award-winning originals, hit TV series, classic films and iconic franchises.',
+    priceText: 'Plans start at $6.99/month',
+  },
+};
+
+/** CTA without `ctaHref` renders a native `<button>` instead of a link. */
+export const CtaAsButton: Story = {
+  args: {
+    logo: 'mosaic',
+    ctaHref: undefined,
     priceText: 'Plans start at $6.99/month',
   },
 };

@@ -6,6 +6,7 @@ import {
   Hero,
   type BrandCardsItem,
   type ButtonVariant,
+  type LogoBrand,
 } from '@repo/ui';
 import { parseMosaicContent, type MosaicBlockPart } from '@/lib/mosaicContent';
 
@@ -24,6 +25,15 @@ const BUTTON_VARIANTS: readonly ButtonVariant[] = [
 function asVariant(value: unknown): ButtonVariant | undefined {
   return BUTTON_VARIANTS.includes(value as ButtonVariant)
     ? (value as ButtonVariant)
+    : undefined;
+}
+
+const LOGO_BRANDS: readonly LogoBrand[] = ['mosaic', 'amcplus'];
+
+/** Decode the `mosaic/hero` `logo` attribute; '' (use `logoSrc`) → undefined. */
+function asLogoBrand(value: unknown): LogoBrand | undefined {
+  return LOGO_BRANDS.includes(value as LogoBrand)
+    ? (value as LogoBrand)
     : undefined;
 }
 
@@ -79,27 +89,6 @@ function renderBlock({ name, props }: MosaicBlockPart): ReactElement | null {
           ctaHref={optionalString(props.ctaHref)}
         />
       );
-    case 'mosaic/brand-cards': {
-      // Each card's attached movie/tv_series seeds its display fields in the
-      // editor; render from them, same as the standalone card block.
-      const cards: BrandCardItem[] = Array.isArray(props.cards)
-        ? (props.cards as Record<string, unknown>[]).map((card) => ({
-            label: String(card.label ?? ''),
-            imageSrc: optionalString(card.imageSrc),
-            imageAlt: optionalString(card.imageAlt),
-            backgroundSrc: optionalString(card.backgroundSrc),
-            href: optionalString(card.href),
-          }))
-        : [];
-      return (
-        <BrandCards
-          title={String(props.title ?? '')}
-          cards={cards}
-          ctaLabel={optionalString(props.ctaLabel)}
-          ctaHref={optionalString(props.ctaHref)}
-        />
-      );
-    }
     case 'mosaic/card':
       // The attached movie/tv_series seeds these display fields in the editor;
       // render from them.
